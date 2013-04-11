@@ -1,6 +1,7 @@
 package jp.reflexworks.servlet.util;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.Properties;
 import java.util.Map;
@@ -36,6 +37,14 @@ public class MailUtil {
 			String password, String host, String port, String protocol,
 			boolean isStarttls, boolean debug) 
 	throws IOException {
+		send(title, message, to, null, from, null, password, host, port, protocol, 
+				isStarttls, debug);
+	}
+	
+	public void send(String title, String message, String to, String toPersonal,
+			String from, String fromPersonal, String password, String host, String port, 
+			String protocol,boolean isStarttls, boolean debug) 
+	throws IOException {
 		Properties props = new Properties();
 		props.put("mail.smtp.host", host);
 		props.put("mail.host", host);
@@ -47,27 +56,36 @@ public class MailUtil {
 			props.put("mail.debug", "true");
 		}
 		
-		send(title, message, to, from, password, props, protocol, debug);
+		send(title, message, to, toPersonal, from, fromPersonal, password, props, 
+				protocol, debug);
 	}
-		
+
 	public void send(String title, String message, String to, String from, 
 			String password, Properties props, String protocol, boolean debug) 
+	throws IOException {
+		send(title, message, to, null, from, null, password, props, protocol, debug);
+	}
+		
+	public void send(String title, String message, String to, String toPersonal,
+			String from, String fromPersonal, String password, Properties props, 
+			String protocol, boolean debug) 
 	throws IOException {
 		Session session = Session.getInstance(props);
 		session.setDebug(debug);
 
         Transport transport = null;
 		try {
+			InternetAddress iaTo = new InternetAddress(to, toPersonal, CHARSET);
+			InternetAddress iaFrom = new InternetAddress(from, fromPersonal, CHARSET);
+			
 			MimeMessage msg = new MimeMessage(session);
 			
 			// From
-			msg.setFrom(new InternetAddress(from));
+			msg.setFrom(iaFrom);
 			// To
-			msg.setRecipient(Message.RecipientType.TO, new InternetAddress(to));
+			msg.setRecipient(Message.RecipientType.TO, iaTo);
 			// Subject
 			msg.setSubject(title, CHARSET);
-			//String encodeTitle = MimeUtility.encodeText(title, CHARSET, ENCODING);
-			//msg.setSubject(encodeTitle, CHARSET);
 			// Date
 			msg.setSentDate(new Date());
 			// 本文
@@ -79,7 +97,9 @@ public class MailUtil {
 			MimeMultipart multipart = new MimeMultipart();
 			msg.setContent(multipart);
 			MimeBodyPart body = new MimeBodyPart();
-			body.setContent(message, CONTENT_TYPE);
+			//body.setContent(message, CONTENT_TYPE);
+			String jisMsg = convertJIS(message);
+			body.setContent(jisMsg, CONTENT_TYPE);
 			multipart.addBodyPart(body);
 
 			// ヘッダ
@@ -107,6 +127,16 @@ public class MailUtil {
         		}
             }
 		}
+	}
+	
+	public String convertJIS(String msg) {
+		try {
+			byte[] convBytes = msg.getBytes(CHARSET);
+			return new String(convBytes);
+		} catch (UnsupportedEncodingException e) {
+			logger.warning("UnsupportedEncodingException: " + e.getMessage());
+		}
+		return null;
 	}
 
 }

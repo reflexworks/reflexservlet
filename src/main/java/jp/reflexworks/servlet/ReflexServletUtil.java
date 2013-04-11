@@ -318,9 +318,27 @@ public class ReflexServletUtil implements ReflexServletConst {
 			}
 		}
 	}
+	
+	/**
+	 * HTMLレスポンス出力
+	 * @param req HttpServletRequest
+	 * @param resp HttpServletResponse
+	 * @param html HTML
+	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
+	 * @param isGZip GZIP形式にする場合true
+	 */
+	public void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
+			String html, int statusCode, boolean isGZip)
+	throws IOException {
+		resp.setContentType(CONTENT_TYPE_HTML);
+		doResponse(req, resp, html, 0, null, statusCode, null, isGZip, false);
+	}
 
 	/**
-	 * エラーページ出力
+	 * エラーページ出力.
+	 * <p>
+	 * ReflexWorksのデフォルトエラーページを出力します.
+	 * </p>
 	 * @param resp HttpServletResponse
 	 * @param exception 例外オブジェクト
 	 */
@@ -342,7 +360,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		// レスポンスデータ出力
 		PrintWriter prtout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, ENCODING)));
 
-		resp.setContentType("text/html;charset=" + ENCODING);
+		resp.setContentType(CONTENT_TYPE_HTML);
 
 		prtout.print("<html>");
 		prtout.print(NEWLINE);

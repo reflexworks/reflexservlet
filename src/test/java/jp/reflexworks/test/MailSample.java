@@ -1,5 +1,6 @@
 package jp.reflexworks.test;
 
+import java.io.IOException;
 import java.util.Properties;
 import java.util.Date;
 
@@ -7,13 +8,16 @@ import javax.mail.Session;
 import javax.mail.Message;
 import javax.mail.Transport;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 
 public class MailSample {
 
 	static String msgTitle = "JavaMail送信テスト";
-	static String msgText = "メール送信テスト。\n２行目です。";
+	static String msgText = "メール送信テスト。\n２行目です。\n3行目です。";
 
 	/**
 	 * メール送信テスト
@@ -47,36 +51,58 @@ public class MailSample {
 		String host = args[3];
 		String port = args[4];
 		
+		// TODO test
+		//String smtpUser = from;
+		//from = "=?iso-2022-jp?B?SVRwcm8bJEIlYSE8JWsbKEI=?= <" + from + ">";
+		// msg.setFrom(new InternetAddress(msg_from,"お名前","iso-2022-jp"));
+		
 		boolean debug = Boolean.valueOf(args[5]).booleanValue();
-
-		Properties props = new Properties();
-		props.put("mail.smtp.host", host);
-		props.put("mail.host", host);
-		props.put("mail.from", from);
-		props.put("mail.smtp.port", port);  // サブミッションポート
-		props.put("mail.smtp.auth", "true");   // SMTP 認証を行う
-		props.put("mail.smtp.starttls.enable", "true");   // STARTTLS
-		if (debug) {
-			props.put("mail.debug", args[3]);
-		}
-
-		Session session = Session.getInstance(props);
-		//SimpleAuthenticator sa = new SimpleAuthenticator(from, password);
-		//Session session = Session.getInstance(props, sa);
-		session.setDebug(debug);
 
         Transport transport = null;
 		try {
+			InternetAddress iaFrom = new InternetAddress(from, "", "iso-2022-jp");
+			InternetAddress iaTo = new InternetAddress(to, "", "iso-2022-jp");
+
+			Properties props = new Properties();
+			props.put("mail.smtp.host", host);
+			props.put("mail.host", host);
+			props.put("mail.from", from);
+			props.put("mail.smtp.port", port);  // サブミッションポート
+			props.put("mail.smtp.auth", "true");   // SMTP 認証を行う
+			props.put("mail.smtp.starttls.enable", "true");   // STARTTLS
+			
+			// TODO test
+			//props.put("mail.smtp.user", smtpUser);
+			
+			if (debug) {
+				props.put("mail.debug", args[3]);
+			}
+
+			Session session = Session.getInstance(props);
+			//SimpleAuthenticator sa = new SimpleAuthenticator(from, password);
+			//Session session = Session.getInstance(props, sa);
+			session.setDebug(debug);
+			
 			MimeMessage msg = new MimeMessage(session);
-			msg.setFrom(new InternetAddress(from));
+			//msg.setFrom(new InternetAddress(from));
+			msg.setFrom(iaFrom);
 			//InternetAddress[] address = InternetAddress.parse(to);
 			//msg.setRecipients(Message.RecipientType.TO, address);
-			msg.setRecipient(Message.RecipientType.TO, new InternetAddress(to));
+			msg.setRecipient(Message.RecipientType.TO, iaTo);
 			msg.setSubject(msgTitle, "ISO-2022-JP");
 			msg.setSentDate(new Date());
 
 			//msg.setText(msgText, "ISO-2022-JP");
-			msg.setContent(msgText, "text/plain; charset=ISO-2022-JP");
+			//msg.setContent(msgText, "text/plain; charset=ISO-2022-JP");
+
+			MimeMultipart multipart = new MimeMultipart();
+			msg.setContent(multipart);
+			MimeBodyPart body = new MimeBodyPart();
+			body.setContent(msgText, "text/plain; charset=ISO-2022-JP");
+			//String encodeText = MimeUtility.encodeText(msgText, "ISO-2022-JP", "Q");	// これだと本文が化ける
+			//body.setContent(encodeText, "text/plain; charset=ISO-2022-JP");
+			multipart.addBodyPart(body);
+
 			msg.setHeader("Content-Transfer-Encoding", "7bit");
 
 			//Transport.send(msg);
@@ -90,6 +116,8 @@ public class MailSample {
 		} catch (MessagingException mex) {
 			System.out.println("¥n--Exception handling in msgsendsample.java");
 			mex.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		} finally {
             if (transport != null) {
             	try {

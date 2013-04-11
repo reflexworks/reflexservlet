@@ -21,6 +21,8 @@ public interface ReflexServletConst {
 	public static final String CONTENT_TYPE_MULTIPART_FORMDATA = "multipart/form-data";
 	/** Content-Type : Text */
 	public static final String CONTENT_TYPE_TEXT = "text/";
+	/** Content-Type : HTML */
+	public static final String CONTENT_TYPE_HTML = "text/html;charset=" + ENCODING;
 	/** XMLヘッダ */
 	public static final String XMLHEAD = "<?xml version=\"1.0\" encoding=\"" + ENCODING + "\" ?>\n";
 	/** json */
