@@ -490,7 +490,7 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 			Object entities, int format, IResourceMapper rxmapper, 
 			int statusCode, String callback, boolean isGZip, boolean isStrict) 
 	throws IOException {
-		doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
+		doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback, 
 				isGZip, isStrict);
 	}
 
@@ -513,8 +513,8 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			int statusCode, String contentType, String callback, 
-			boolean isGZip, boolean isStrict) 
+			int statusCode, String contentType, String callback, boolean isGZip, 
+			boolean isStrict) 
 	throws IOException {
 		util.doResponse(req, resp, entities, format, rxmapper, 
 				statusCode, contentType, callback, isGZip, isStrict);

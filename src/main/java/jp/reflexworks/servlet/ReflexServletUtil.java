@@ -248,7 +248,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
 				isGZip, isStrict);
 	}
-
+	
 	/**
 	 * レスポンス出力
 	 * @param req HttpServletRequest
@@ -277,7 +277,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 
 		// ステータスコードの設定
 		resp.setStatus(statusCode);
-		// Content-Typeが指定されている場合設定
+		// Content-Typeが指定されている場合は設定
 		if (!StringUtils.isBlank(contentType)) {
 			resp.setContentType(contentType);
 		}
@@ -363,6 +363,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
 			String html, int statusCode, boolean isGZip)
 	throws IOException {
+		//resp.setContentType(CONTENT_TYPE_HTML);
 		doResponse(req, resp, html, 0, null, statusCode, CONTENT_TYPE_HTML, null, isGZip, false);
 	}
 

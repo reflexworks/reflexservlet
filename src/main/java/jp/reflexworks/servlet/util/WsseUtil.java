@@ -460,7 +460,7 @@ public class WsseUtil {
 	 * @param s
 	 * @return 暗号化文字列
 	 */
-	private String rot13(String s) {
+	public String rot13(String s) {
 
 		StringBuffer sb = new StringBuffer();
         for (int i = 0; i < s.length(); i++) {
