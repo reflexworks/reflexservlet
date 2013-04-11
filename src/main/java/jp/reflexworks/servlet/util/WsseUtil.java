@@ -461,6 +461,9 @@ public class WsseUtil {
 	 * @return 暗号化文字列
 	 */
 	public String rot13(String s) {
+		if (s == null) {
+			return null;
+		}
 
 		StringBuffer sb = new StringBuffer();
         for (int i = 0; i < s.length(); i++) {
