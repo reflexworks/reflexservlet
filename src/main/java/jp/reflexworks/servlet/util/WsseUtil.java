@@ -2,10 +2,16 @@ package jp.reflexworks.servlet.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Date;
+import java.util.Map;
+import java.util.List;
+import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -13,6 +19,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.Cookie;
 
 import jp.sourceforge.reflex.util.DateUtil;
+import jp.sourceforge.reflex.util.StringUtils;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -50,17 +57,18 @@ public class WsseUtil {
 	public static final String RXID = "RXID";	// URLパラメータのみ
 	/** SSID */
 	public static final String SSID = "SSID";	// CookieにセットするRXID
-
-	/*
-	private static final String SESSIONID_SEPARATOR = ",";
-	private static final int IDX_USERNAME = 0;
-	private static final int IDX_PASSWORDDIGEST = 1;
-	private static final int IDX_NONCE = 2;
-	private static final int IDX_CREATED = 3;
-	*/
 	
 	/** エンコード */
 	public static final String ENCODING = "UTF-8";
+	
+	/** Set-Cookie */
+	public static final String SET_COOKIE = "Set-Cookie";
+	/** Set-CookieされたRXIDの接頭辞 */
+	public static final String COOKIE_RXID_PREFIX = "RXID=";
+	public static final int COOKIE_RXID_PREFIX_LEN = COOKIE_RXID_PREFIX.length();
+	
+	/** RXID Delimiter **/
+	private static final String RXID_DELIMITER = "-";
 
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 		
@@ -355,7 +363,7 @@ public class WsseUtil {
 		}
 
 		if (auth != null) {
-			auth.isSession = true;
+			auth.isCookie = true;
 		}
 
 		return auth;
@@ -399,6 +407,8 @@ public class WsseUtil {
 	public WsseAuth parseRXID(String value, boolean isRxid) {
 		WsseAuth auth = null;
 		if (value != null) {
+			/*
+			// 旧形式
 			try {
 				// Base64デコード
 				byte[] rxidByte = Base64.decodeBase64(value.getBytes());
@@ -409,11 +419,129 @@ public class WsseUtil {
 				}
 				
 			} catch (UnsupportedEncodingException e) {}	// Do nothing.
+			*/
+			// 短縮形式
+			// 不正文字列の場合処理しないでnullを返す
+			int p1 = value.indexOf(RXID_DELIMITER);
+			int p2 = -1;
+			int p3 = -1;
+			if (p1 > 0) {
+				p2 = value.substring(p1 + 1).indexOf(RXID_DELIMITER) + 1;
+			}
+			if (p2 > 0) {
+				p2 += p1;
+				p3 = value.substring(p2 + 1).indexOf(RXID_DELIMITER) + 1;
+			}
+			if (p3 > 0) {
+				p3 += p2;
+				try {
+					String createdStr = getDateTimeOfWSSE(value.substring(0, p1));
+					String nonceStr = rot13(value.substring(p1 + 1, p2));
+					String passwordDigestStr = rot13(value.substring(p2 + 1, p3)); 
+					String username = rot13(value.substring(p3 + 1)); 
+					if (createdStr != null && nonceStr != null && 
+							passwordDigestStr != null && username != null) {
+						auth = new WsseAuth(username, passwordDigestStr, 
+								nonceStr, createdStr);
+						auth.isOnetime = true;
+					}
+				} catch (ParseException e) {}	// Do nothing.
+			}
 		}
 		
+		if (auth != null && isRxid) {
+			auth.isRxid = true;
+		}
 		return auth;
 	}
 	
+	/**
+	 * rotate13(簡易暗号化)
+	 * @param s
+	 * @return 暗号化文字列
+	 */
+	private String rot13(String s) {
+
+		StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if       (c == '@') c = '!';
+            else if       (c == '!') c = '@';
+            else if       (c == '/') c = '~';
+            else if       (c == '~') c = '/';
+            else if       (c == '+') c = '*';
+            else if       (c == '*') c = '+';
+            else if       (c >= 'a' && c <= 'm') c += 13;
+            else if  (c >= 'A' && c <= 'M') c += 13;
+            else if  (c >= 'n' && c <= 'z') c -= 13;
+            else if  (c >= 'N' && c <= 'Z') c -= 13;
+
+            if       (c != '=')  {
+            	sb.append(c);
+            }
+        }
+        return sb.toString();
+	}
+
+	/**
+	 * RXIDのcreatedをWSSE用("yyyy-MM-dd'T'HH:mm:ss+99:99"形式の文字列)に変換します
+	 * @param rxidcreated RXIDのcreated
+	 * @return dateの文字列
+	 * @throws ParseException 
+	 */
+	private String getDateTimeOfWSSE(String rxidcreated) throws ParseException {
+		String dateStr = rxidcreated.replace("P", "+").replace("M", "-");
+		int idx = dateStr.lastIndexOf("+");
+		if (idx < 0) {
+			idx = dateStr.lastIndexOf("-");
+		}
+		String timeZoneId = null;
+		if (idx > 0) {
+			timeZoneId = "GMT" + dateStr.substring(idx) + ":00";
+		}
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmssZ");
+		if (timeZoneId != null) {
+			dateStr += "00";
+			TimeZone timeZone = TimeZone.getTimeZone(timeZoneId);
+			format.setTimeZone(timeZone);
+			Date date = format.parse(dateStr);
+			return DateUtil.getDateTime(date, timeZoneId);
+		}
+		return null;
+	}
+
+	/**
+	 * WSSEのcreatedをRXID用("yyyyMMddHHmmssP99"形式の文字列)に変換します
+	 * @param wssecreated WSSEのcreated
+	 * @return dateの文字列
+	 * @throws ParseException 
+	 */
+	private String getDateTimeOfRXID(String wssecreated) throws ParseException {
+		int idx = wssecreated.lastIndexOf("+");
+		if (idx < 0) {
+			idx = wssecreated.lastIndexOf("-");
+		}
+		TimeZone timeZone = null;
+		if (idx > 0) {
+			String id = "GMT" + wssecreated.substring(idx);
+			timeZone = TimeZone.getTimeZone(id);
+		}
+		
+		Date date = DateUtil.getDate(wssecreated);
+		SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmss");
+		if (timeZone != null) {
+			format.setTimeZone(timeZone);
+		}
+		String datestring = format.format(date);
+		format = new SimpleDateFormat("Z");
+		if (timeZone != null) {
+			format.setTimeZone(timeZone);
+		}
+		String zone = format.format(date);
+		datestring += zone.substring(0, 3).replace("+", "P").replace("-", "M");
+		return datestring;
+	}
+
 	/**
 	 * CookieからRXID文字列を取得します
 	 * @param req リクエスト
@@ -494,15 +622,55 @@ public class WsseUtil {
 	public String getRXIDString(WsseAuth auth) {
 		if (auth != null && auth.username != null && auth.passwordDigest != null &&
 				auth.nonce != null && auth.created != null) {
+			// 旧形式
+			/*
 			try {
 				String rxidStr = getWsseHeaderValue(auth);
 				byte[] rxidByte = rxidStr.getBytes(ENCODING);
 				
 				return new String(Base64.encodeBase64(rxidByte));
 			} catch (UnsupportedEncodingException e) {}	// Do nothing.
+			*/
+
+			// 短縮形式
+			try {
+				StringBuilder buf = new StringBuilder();
+				buf.append(getDateTimeOfRXID(auth.created));
+				buf.append(RXID_DELIMITER);
+				buf.append(rot13(auth.nonce));
+				buf.append(RXID_DELIMITER);
+				buf.append(rot13(auth.passwordDigest));
+				buf.append(RXID_DELIMITER);
+				buf.append(rot13(auth.username));
+				return buf.toString();
+				
+			} catch (ParseException e) {}	// Do nothing.
 		}
 
 		return null;
+	}
+	
+	/**
+	 * ユーザ名とパスワードからRXID文字列を作成します.
+	 * @param username ユーザ名
+	 * @param password パスワード
+	 * @return RXID文字列
+	 */
+	public String createRXIDString(String username, String password) {
+		WsseAuth auth = getWsse(username, password);
+		return getRXIDString(auth);
+	}
+	
+	/**
+	 * ユーザ名とパスワードからRXID Cookieオブジェクトを作成します.
+	 * @param username ユーザ名
+	 * @param password パスワード
+	 * @return RXID Cookieオブジェクト
+	 */
+	public Cookie createRXID(String username, String password) {
+		WsseAuth auth = getWsse(username, password);
+		String rxidString = getRXIDString(auth);
+		return getRXID(rxidString);
 	}
 
 	/**
@@ -565,82 +733,133 @@ public class WsseUtil {
 		return null;
 	}
 	
-	/*
-	 * WSSEのusername = [認可ID]認証IDとし、パスワードは認証IDに対してチェックする。ACLは認可IDに対してチェックする。
+	/**
+	 * URLフェッチ実行時、Set-CookieされたRXIDを取得します.
+	 * @param conn HttpURLConnection
+	 * @return RXID
 	 */
-	/*
-	public String getUsername(String certificationId, String permissionId) {
-		StringBuffer buf = new StringBuffer();
-		if (permissionId != null) {
-			buf.append("[");
-			buf.append(permissionId);
-			buf.append("]");
+	public String getRXIDFromConnection(HttpURLConnection conn) {
+		if (conn == null) {
+			return null;
 		}
-		buf.append(certificationId);
-		return buf.toString();
-	}
-	
-	public String getCertificationId(String username) {
-		if (username != null) {
-			int idx1 = username.indexOf("[");
-			int idx2 = username.indexOf("]");
-			if (idx1 > -1 && idx2 > 0) {
-				if (idx2 < username.length()) {
-					return username.substring(idx2 + 1);
-				} else {
-					return null;
+		String rxid = null;
+		Map<String, List<String>> headers = conn.getHeaderFields();
+		List<String> cookies = headers.get(SET_COOKIE);
+		if (cookies != null) {
+			for (String cookie : cookies) {
+				if (cookie.startsWith(COOKIE_RXID_PREFIX)) {
+					int idx = cookie.indexOf(";");
+					if (idx == -1) {
+						idx = cookie.length();
+					}
+					rxid = cookie.substring(COOKIE_RXID_PREFIX_LEN, idx);
+					// ダブルクォーテーションを除去
+					rxid = StringUtils.trimDoubleQuotes(rxid);
+					break;
 				}
 			}
 		}
-		return username;
+		return rxid;
 	}
-	
-	public String getPermissionId(String username) {
-		if (username != null) {
-			int idx1 = username.indexOf("[");
-			int idx2 = username.indexOf("]");
-			if (idx1 > -1 && idx2 > 0) {
-				return username.substring(idx1 + 1, idx2);
-			}
-		}
-		return username;
-	}
-	*/
 
 	/**
-	 * WSSE認証情報
+	 * created範囲チェック
+	 * @param rxid RXID文字列
+	 * @param beforeMinute 現在時刻から過去の有効範囲(分). 過去の有効範囲を指定しない場合はnull.
+	 * @param afterMinute 現在時刻から未来の有効範囲(分). 未来の有効範囲を指定しない場合はnull.
+	 * @return 指定された範囲内の場合true, 範囲外の場合false.
 	 */
-	public class WsseAuth {
-		/** ユーザ名 */
-		public String username;
-		/** PasswordDigest */
-		public String passwordDigest;
-		/** Nonce */
-		public String nonce;
-		/** Created */
-		public String created;
-		/** パスワード */
-		public String password;
-		public boolean isSession;
-		/** ワンタイムかどうか */
-		public boolean isOnetime;
-		
-		public WsseAuth(String username, String passwordDigest, String nonce, 
-				String created) {
-			this.username = username;
-			this.passwordDigest = passwordDigest;
-			this.nonce = nonce;
-			this.created = created;
-		}
-		
-		@Override
-		public String toString() {
-			return "WsseAuth [username=" + username + ", passwordDigest="
-					+ passwordDigest + ", nonce=" + nonce + ", created="
-					+ created + ", isRxid=" + isOnetime + ", isSession=" + isSession
-					+ "]";
-		}
+	public boolean checkCreatedFromRXID(String rxid, Integer beforeMinute, 
+			Integer afterMinute) {
+		return checkCreatedFromRXID(rxid, new Date(), beforeMinute, afterMinute);
+	}
 
+	/**
+	 * created範囲チェック
+	 * @param rxid RXID文字列
+	 * @param now 現在時刻
+	 * @param beforeMinute 現在時刻から過去の有効範囲(分). 過去の有効範囲を指定しない場合はnull.
+	 * @param afterMinute 現在時刻から未来の有効範囲(分). 未来の有効範囲を指定しない場合はnull.
+	 * @return 指定された範囲内の場合true, 範囲外の場合false.
+	 */
+	public boolean checkCreatedFromRXID(String rxid, Date now, Integer beforeMinute, 
+			Integer afterMinute) {
+		WsseAuth auth = parseRXID(rxid);
+		return checkCreated(auth, now, beforeMinute, afterMinute);
+	}
+
+	/**
+	 * created範囲チェック
+	 * @param auth WsseAuth情報
+	 * @param beforeMinute 現在時刻から過去の有効範囲(分). 過去の有効範囲を指定しない場合はnull.
+	 * @param afterMinute 現在時刻から未来の有効範囲(分). 未来の有効範囲を指定しない場合はnull.
+	 * @return 指定された範囲内の場合true, 範囲外の場合false.
+	 */
+	public boolean checkCreated(WsseAuth auth, Integer beforeMinute, 
+			Integer afterMinute) {
+		return checkCreated(auth, new Date(), beforeMinute, afterMinute);
+	}
+
+	/**
+	 * created範囲チェック
+	 * @param auth WsseAuth情報
+	 * @param now 現在時刻
+	 * @param beforeMinute 現在時刻から過去の有効範囲(分). 過去の有効範囲を指定しない場合はnull.
+	 * @param afterMinute 現在時刻から未来の有効範囲(分). 未来の有効範囲を指定しない場合はnull.
+	 * @return 指定された範囲内の場合true, 範囲外の場合false.
+	 */
+	public boolean checkCreated(WsseAuth auth, Date now, Integer beforeMinute, 
+			Integer afterMinute) {
+		if (auth == null) {
+			return false;
+		}
+		return checkCreated(auth.created, now, beforeMinute, afterMinute);
+	}
+	
+	/**
+	 * created範囲チェック
+	 * @param created created文字列
+	 * @param beforeMinute 現在時刻から過去の有効範囲(分). 過去の有効範囲を指定しない場合はnull.
+	 * @param afterMinute 現在時刻から未来の有効範囲(分). 未来の有効範囲を指定しない場合はnull.
+	 * @return 指定された範囲内の場合true, 範囲外の場合false.
+	 */
+	public boolean checkCreated(String created, Integer beforeMinute, 
+			Integer afterMinute) {
+		return checkCreated(created, new Date(), beforeMinute, afterMinute);
+	}
+
+	/**
+	 * created範囲チェック
+	 * @param created created文字列
+	 * @param now 現在時刻
+	 * @param beforeMinute 現在時刻から過去の有効範囲(分). 過去の有効範囲を指定しない場合はnull.
+	 * @param afterMinute 現在時刻から未来の有効範囲(分). 未来の有効範囲を指定しない場合はnull.
+	 * @return 指定された範囲内の場合true, 範囲外の場合false.
+	 */
+	public boolean checkCreated(String created, Date now, Integer beforeMinute, 
+			Integer afterMinute) {
+		if (created == null) {
+			return false;
+		}
+		try {
+			// 範囲チェック
+			Date createdDate = DateUtil.getDate(created);
+			boolean checkBefore = true;
+			boolean checkAfter = true;
+			if (beforeMinute != null) {
+				Date nowBefore5min = DateUtil.addTime(now, 0, 0, 0, 0, 0 - beforeMinute, 0, 0);
+				checkBefore = createdDate.after(nowBefore5min);
+			}
+			if (afterMinute != null) {
+				Date nowAfter5min = DateUtil.addTime(now, 0, 0, 0, 0, afterMinute, 0, 0);
+				checkAfter = createdDate.before(nowAfter5min);
+			}
+			return checkBefore && checkAfter;
+			
+		} catch (ParseException e) {
+			logger.info("ParseException : " + e.getMessage());
+		}
+		return false;
 	}
 
 }

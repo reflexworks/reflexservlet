@@ -14,9 +14,11 @@ import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeUtility;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeUtility;
+
+import jp.sourceforge.reflex.util.StringUtils;
 
 public class MailUtil {
 	
@@ -89,17 +91,26 @@ public class MailUtil {
 			// Date
 			msg.setSentDate(new Date());
 			// 本文
-			//msg.setContent(message, CONTENT_TYPE);
 			/*
+			//msg.setContent(message, CONTENT_TYPE);
 			String encodeMessage = MimeUtility.encodeText(message, CHARSET, ENCODING);
 			msg.setContent(encodeMessage, CONTENT_TYPE);
 			*/
+
 			MimeMultipart multipart = new MimeMultipart();
 			msg.setContent(multipart);
 			MimeBodyPart body = new MimeBodyPart();
 			//body.setContent(message, CONTENT_TYPE);
-			String jisMsg = convertJIS(message);
-			body.setContent(jisMsg, CONTENT_TYPE);
+
+			if (!StringUtils.isBlank(protocol)) {
+				// 通常のメール送信
+				String jisMsg = convertJIS(message);
+				body.setContent(jisMsg, CONTENT_TYPE);
+			} else {
+				// GAE
+				body.setText(message);
+			}
+			
 			multipart.addBodyPart(body);
 
 			// ヘッダ
@@ -107,9 +118,16 @@ public class MailUtil {
 				msg.setHeader(mapEntry.getKey(), mapEntry.getValue());
 			}
 
-            transport = session.getTransport(protocol);
-            transport.connect(from, password);
-            transport.sendMessage(msg, msg.getAllRecipients());
+			if (!StringUtils.isBlank(protocol)) {
+				// protocolが設定されている場合、認証コネクト
+				transport = session.getTransport(protocol);
+				transport.connect(from, password);
+	            transport.sendMessage(msg, msg.getAllRecipients());
+
+			} else {
+				// protocolが設定されていない場合、そのままsendする。(GAE)
+				Transport.send(msg);
+			}
 		
     		//logger.info("send mail.");
 

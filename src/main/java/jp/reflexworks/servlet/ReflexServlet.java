@@ -552,33 +552,8 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			Object entities, int format, IResourceMapper rxmapper, 
 			int statusCode, String callback, boolean isGZip, boolean isStrict) 
 	throws IOException {
-		doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
-				isGZip, isStrict);
-	}
-	
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param req HttpServletRequest
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 1:XML, 2:JSON, 3:MessagePack
-	 * @param rxmapper Resource Mapper
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param contentType Content-Type
-	 * @param callback callback関数
-	 * @param isGZip GZIP圧縮する場合true
-	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, int format, IResourceMapper rxmapper, 
-			int statusCode, String contentType, String callback, boolean isGZip, 
-			boolean isStrict) 
-	throws IOException {
 		util.doResponse(req, resp, entities, format, rxmapper, 
-				statusCode, contentType, callback, isGZip, isStrict);
+				statusCode, callback, isGZip, isStrict);
 	}
 
 	/**
