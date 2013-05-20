@@ -745,8 +745,20 @@ public class WsseUtil {
 		if (conn == null) {
 			return null;
 		}
-		String rxid = null;
 		Map<String, List<String>> headers = conn.getHeaderFields();
+		return getRXIDFromHeaders(headers);
+	}
+	
+	/**
+	 * URLフェッチ実行時、Set-CookieされたRXIDを取得します.
+	 * @param headers レスポンスヘッダ
+	 * @return RXID
+	 */
+	public String getRXIDFromHeaders(Map<String, List<String>> headers) {
+		if (headers == null) {
+			return null;
+		}
+		String rxid = null;
 		List<String> cookies = headers.get(SET_COOKIE);
 		if (cookies != null) {
 			for (String cookie : cookies) {

@@ -311,23 +311,25 @@ public class ReflexServletUtil implements ReflexServletConst {
 					// JSON
 					if (StringUtils.isBlank(contentType)) {
 						resp.setContentType(CONTENT_TYPE_REFLEX_JSON);
+						resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, 
+								HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
 					}
 		
-					// コールバック指定の場合は付加する
-					if (callback != null && callback.length() > 0) {
-						prtout.write(callback);
-						prtout.write("(");
-					}
+					// コールバック指定の場合は付加する -> 2013.5.20 廃止
+					//if (callback != null && callback.length() > 0) {
+					//	prtout.write(callback);
+					//	prtout.write("(");
+					//}
 					
 					// JSON中身
 					if (entities != null) {
 						rxmapper.toJSON(entities, prtout);
 					}
 		
-					// コールバック指定の場合は付加する
-					if (callback != null && callback.length() > 0) {
-						prtout.write(");");
-					}
+					// コールバック指定の場合は付加する -> 2013.5.20 廃止
+					//if (callback != null && callback.length() > 0) {
+					//	prtout.write(");");
+					//}
 		
 				} else {
 					// XMLヘッダー出力
