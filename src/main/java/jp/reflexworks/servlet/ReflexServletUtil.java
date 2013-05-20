@@ -747,9 +747,24 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param format 0:String, 1:XML, 2:JSON, 3:MessagePack, 4:multipart/form-data
 	 * @return ファイルアップロードの場合true
 	 */
-	public boolean isFileUpload(int format) {
+	public static boolean isFileUpload(int format) {
 		if (format == FORMAT_MULTIPART_FORMDATA) {
 			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * X-Requested-WithヘッダがXMLHttpRequestとなっているかどうかチェックする.
+	 * @param req リクエスト
+	 * @return X-Requested-WithヘッダがXMLHttpRequestとなっている場合true
+	 */
+	public static boolean isXMLHttpRequest(HttpServletRequest req) {
+		if (req != null) {
+			String requestedWith = req.getHeader(X_REQUESTED_WITH);
+			if (X_REQUESTED_WITH_WHR.equals(requestedWith)) {
+				return true;
+			}
 		}
 		return false;
 	}

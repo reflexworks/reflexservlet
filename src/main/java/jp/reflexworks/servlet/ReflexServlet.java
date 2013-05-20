@@ -705,7 +705,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public boolean isFileUpload(HttpServletRequest req) {
 		int format = getFormat(req);
-		return util.isFileUpload(format);
+		return ReflexServletUtil.isFileUpload(format);
 	}
 
 }

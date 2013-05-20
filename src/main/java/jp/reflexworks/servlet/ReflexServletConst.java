@@ -47,6 +47,11 @@ public interface ReflexServletConst {
 	public static final String HEADER_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
 	/** Response Header value : X-Content-Type-Options: nosniff */
 	public static final String HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF = "nosniff";
+	/** Reqest Header : X-Requested-With */
+	public static final String X_REQUESTED_WITH = "X-Requested-With";
+	/** Reqest Header value : XMLHttpRequest */
+	public static final String X_REQUESTED_WITH_WHR = "XMLHttpRequest";
+	
 
 	/** XMLヘッダ */
 	public static final String XMLHEAD = "<?xml version=\"1.0\" encoding=\"" + ENCODING + "\" ?>\n";
