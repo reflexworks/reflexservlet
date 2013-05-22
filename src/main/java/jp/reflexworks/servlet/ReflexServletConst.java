@@ -43,6 +43,8 @@ public interface ReflexServletConst {
 
 	/** Header : Content Type */
 	public static final String HEADER_CONTENT_TYPE = "Content-Type";
+	/** Header : Content Length */
+	public static final String HEADER_CONTENT_LENGTH = "Content-Length";
 	/** Response Header : X-Content-Type-Options: nosniff */
 	public static final String HEADER_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
 	/** Response Header value : X-Content-Type-Options: nosniff */
@@ -51,7 +53,6 @@ public interface ReflexServletConst {
 	public static final String X_REQUESTED_WITH = "X-Requested-With";
 	/** Reqest Header value : XMLHttpRequest */
 	public static final String X_REQUESTED_WITH_WHR = "XMLHttpRequest";
-	
 
 	/** XMLヘッダ */
 	public static final String XMLHEAD = "<?xml version=\"1.0\" encoding=\"" + ENCODING + "\" ?>\n";
