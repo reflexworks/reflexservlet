@@ -54,7 +54,7 @@ public class WsseUtil {
 	
 	// Cookieの項目名
 	/** RXID */
-	public static final String RXID = "RXID";	// URLパラメータのみ
+	public static final String RXID = "_RXID";	// URLパラメータのみ
 	/** SSID */
 	public static final String SSID = "SSID";	// CookieにセットするRXID
 	
@@ -64,7 +64,7 @@ public class WsseUtil {
 	/** Set-Cookie */
 	public static final String SET_COOKIE = "Set-Cookie";
 	/** Set-CookieされたRXIDの接頭辞 */
-	public static final String COOKIE_RXID_PREFIX = "RXID=";
+	public static final String COOKIE_RXID_PREFIX = RXID + "=";
 	public static final int COOKIE_RXID_PREFIX_LEN = COOKIE_RXID_PREFIX.length();
 	
 	/** RXID Delimiter **/
