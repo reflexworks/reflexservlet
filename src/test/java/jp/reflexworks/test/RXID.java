@@ -12,7 +12,7 @@ import jp.sourceforge.reflex.util.DateUtil;
 
 public class RXID {
 
-	public static void main(String[] args) throws ParseException, UnsupportedEncodingException {
+	public static void main(String[] args) {
 
 		String username = "testuser-x-y-z@example-mail.com";
 		//String username = "super@$%-_.z";
@@ -23,31 +23,39 @@ public class RXID {
 		//String password = "noriko2010";
 		
 		WsseUtil wsseUtil = new WsseUtil();
-		
-		String wsse = wsseUtil.getWsseHeaderValue(username, password);
 
-		System.out.println("wsse=" + wsse);
-
-		// 新RXIDのチェック
-		WsseAuth auth = wsseUtil.parseWSSEheader(wsse);
-		String rxid = getRXIDString(auth);
-		WsseAuth wsseauth = parseRXID(rxid);
-		
-		boolean checkauth = wsseUtil.checkAuth(wsseauth, password);
-		
-		System.out.println("rxid=" + rxid);
-		System.out.println(wsseauth.toString());
-		System.out.println("checkauth=" + checkauth);
-
-		// 旧RXIDのチェック -> 旧で無くなった
-		String rxid2 = wsseUtil.getRXIDString(wsseauth);
-		WsseAuth wsseauth2 = wsseUtil.parseRXID(rxid2);
-		boolean checkauth2 = wsseUtil.checkAuth(wsseauth, password);
-
-		System.out.println("[WsseUtil]");
-		System.out.println("rxid=" + rxid2);
-		System.out.println(wsseauth2.toString());
-		System.out.println("checkauth=" + checkauth2);
+		try {
+			String wsse = wsseUtil.getWsseHeaderValue(username, password);
+	
+			System.out.println("wsse=" + wsse);
+	
+			// 新RXIDのチェック
+			WsseAuth auth = wsseUtil.parseWSSEheader(wsse);
+			String rxid = getRXIDString(auth);
+			WsseAuth wsseauth = parseRXID(rxid);
+			
+			boolean checkauth = wsseUtil.checkAuth(wsseauth, password);
+			
+			boolean checkauth256 = wsseUtil.checkAuth(auth, password);
+			
+			System.out.println("rxid=" + rxid);
+			System.out.println(wsseauth.toString());
+			System.out.println("checkauth=" + checkauth);
+			System.out.println("checkauth-256=" + checkauth256);
+	
+			// 旧RXIDのチェック -> 旧で無くなった
+			String rxid2 = wsseUtil.getRXIDString(wsseauth);
+			WsseAuth wsseauth2 = wsseUtil.parseRXID(rxid2);
+			boolean checkauth2 = wsseUtil.checkAuth(wsseauth, password);
+	
+			System.out.println("[WsseUtil]");
+			System.out.println("rxid=" + rxid2);
+			System.out.println(wsseauth2.toString());
+			System.out.println("checkauth=" + checkauth2);
+			
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**

@@ -41,16 +41,19 @@ public class WsseUtil {
 	public static final String NONCE = "Nonce";
 	/** Created */
 	public static final String CREATED = "Created";
+	/** ハッシュ関数 */
+	//public static final String HASH_ALGORITHM = "SHA-1";
+	public static final String HASH_ALGORITHM = "SHA-256";
 	
 	// URLパラメータの項目名
 	/** URLパラメータのUsername　*/
-	public static final String PARAM_USER = "user";
+	public static final String PARAM_USER = "_user";
 	/** URLパラメータのPasswordDigest　*/
-	public static final String PARAM_PASSWORDDIGEST = "digest";
+	public static final String PARAM_PASSWORDDIGEST = "_digest";
 	/** URLパラメータのNonce　*/
-	public static final String PARAM_NONCE = "nonce";
+	public static final String PARAM_NONCE = "_nonce";
 	/** URLパラメータのCreated　*/
-	public static final String PARAM_CREATED = "created";
+	public static final String PARAM_CREATED = "_created";
 	
 	// Cookieの項目名
 	/** RXID */
@@ -186,7 +189,8 @@ public class WsseUtil {
 			System.arraycopy(passwordB, 0, v, nonceB.length + createdB.length, 
 					passwordB.length);
 
-			MessageDigest md = MessageDigest.getInstance("SHA1");
+			//MessageDigest md = MessageDigest.getInstance("SHA1");
+			MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
 			md.update(v);
 			byte[] digest = md.digest();
 			
@@ -701,7 +705,8 @@ public class WsseUtil {
 			System.arraycopy(passwordB, 0, v, nonceB.length + createdB.length, 
 					passwordB.length);
 
-			MessageDigest md = MessageDigest.getInstance("SHA1");
+			//MessageDigest md = MessageDigest.getInstance("SHA1");
+			MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
 			md.update(v);
 
 			//digestを比較
