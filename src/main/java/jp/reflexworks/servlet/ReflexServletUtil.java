@@ -22,6 +22,7 @@ import jp.reflexworks.servlet.util.HttpStatus;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
 import jp.sourceforge.reflex.util.FileUtil;
+import jp.sourceforge.reflex.util.StringUtils;
 
 /**
  * Reflex サーブレットユーティリティ.
@@ -227,7 +228,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		}
 		return sb.toString();
 	}
-		
+	
 	/**
 	 * レスポンス出力
 	 * @param req HttpServletRequest
@@ -244,6 +245,28 @@ public class ReflexServletUtil implements ReflexServletConst {
 			Object entities, int format, IResourceMapper rxmapper, 
 			int statusCode, String callback, boolean isGZip, boolean isStrict) 
 	throws IOException {
+		doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
+				isGZip, isStrict);
+	}
+	
+	/**
+	 * レスポンス出力
+	 * @param req HttpServletRequest
+	 * @param resp HttpServletResponse
+	 * @param entities XMLまたはJSONにシリアライズするentity
+	 * @param format 1:XML, 2:JSON, 3:MessagePack
+	 * @param rxmapper ResourceMapper
+	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
+	 * @param contentType Content-Type
+	 * @param callback callback関数
+	 * @param isGZip GZIP形式にする場合true
+	 * @param isStrict XMLの名前空間を出力する場合true
+	 */
+	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
+			Object entities, int format, IResourceMapper rxmapper, 
+			int statusCode, String contentType, String callback, 
+			boolean isGZip, boolean isStrict) 
+	throws IOException {
 		OutputStream out = null;
 		if (isGZip && isGZip(req)) {
 			setGZipHeader(resp);
@@ -254,11 +277,17 @@ public class ReflexServletUtil implements ReflexServletConst {
 
 		// ステータスコードの設定
 		resp.setStatus(statusCode);
+		// Content-Typeが指定されている場合は設定
+		if (!StringUtils.isBlank(contentType)) {
+			resp.setContentType(contentType);
+		}
 
 		// MessagePackの場合は、PrintWriterでなくOutputStreamを使用する。
 		if (!(entities instanceof String) && format == FORMAT_MESSAGEPACK) {
 			// MessagePack
-			resp.setContentType(CONTENT_TYPE_MESSAGEPACK);
+			if (StringUtils.isBlank(contentType)) {
+				resp.setContentType(CONTENT_TYPE_MESSAGEPACK);
+			}
 			try {
 				rxmapper.toMessagePack(entities, out);
 				
@@ -280,27 +309,33 @@ public class ReflexServletUtil implements ReflexServletConst {
 					
 				} else if (format == FORMAT_JSON) {
 					// JSON
-					resp.setContentType(CONTENT_TYPE_REFLEX_JSON);
-		
-					// コールバック指定の場合は付加する
-					if (callback != null && callback.length() > 0) {
-						prtout.write(callback);
-						prtout.write("(");
+					if (StringUtils.isBlank(contentType)) {
+						resp.setContentType(CONTENT_TYPE_REFLEX_JSON);
+						resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, 
+								HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
 					}
+		
+					// コールバック指定の場合は付加する -> 2013.5.20 廃止
+					//if (callback != null && callback.length() > 0) {
+					//	prtout.write(callback);
+					//	prtout.write("(");
+					//}
 					
 					// JSON中身
 					if (entities != null) {
 						rxmapper.toJSON(entities, prtout);
 					}
 		
-					// コールバック指定の場合は付加する
-					if (callback != null && callback.length() > 0) {
-						prtout.write(");");
-					}
+					// コールバック指定の場合は付加する -> 2013.5.20 廃止
+					//if (callback != null && callback.length() > 0) {
+					//	prtout.write(");");
+					//}
 		
 				} else {
 					// XMLヘッダー出力
-					resp.setContentType(CONTENT_TYPE_REFLEX_XML);
+					if (StringUtils.isBlank(contentType)) {
+						resp.setContentType(CONTENT_TYPE_REFLEX_XML);
+					}
 	
 					// XML
 					if (entities != null) {
@@ -330,8 +365,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
 			String html, int statusCode, boolean isGZip)
 	throws IOException {
-		resp.setContentType(CONTENT_TYPE_HTML);
-		doResponse(req, resp, html, 0, null, statusCode, null, isGZip, false);
+		//resp.setContentType(CONTENT_TYPE_HTML);
+		doResponse(req, resp, html, 0, null, statusCode, CONTENT_TYPE_HTML, null, isGZip, false);
 	}
 
 	/**
@@ -712,9 +747,24 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param format 0:String, 1:XML, 2:JSON, 3:MessagePack, 4:multipart/form-data
 	 * @return ファイルアップロードの場合true
 	 */
-	public boolean isFileUpload(int format) {
+	public static boolean isFileUpload(int format) {
 		if (format == FORMAT_MULTIPART_FORMDATA) {
 			return true;
+		}
+		return false;
+	}
+	
+	/**
+	 * X-Requested-WithヘッダがXMLHttpRequestとなっているかどうかチェックする.
+	 * @param req リクエスト
+	 * @return X-Requested-WithヘッダがXMLHttpRequestとなっている場合true
+	 */
+	public static boolean isXMLHttpRequest(HttpServletRequest req) {
+		if (req != null) {
+			String requestedWith = req.getHeader(X_REQUESTED_WITH);
+			if (X_REQUESTED_WITH_WHR.equals(requestedWith)) {
+				return true;
+			}
 		}
 		return false;
 	}
