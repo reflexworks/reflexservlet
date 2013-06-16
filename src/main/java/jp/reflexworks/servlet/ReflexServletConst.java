@@ -53,7 +53,7 @@ public interface ReflexServletConst {
 	public static final String X_REQUESTED_WITH = "X-Requested-With";
 	/** Reqest Header value : XMLHttpRequest */
 	public static final String X_REQUESTED_WITH_WHR = "XMLHttpRequest";
-	/** Reqest Header value : Host */
+	/** Reqest Header : Host */
 	public static final String HEADER_HOST = "Host";
 
 	/** XMLヘッダ */
