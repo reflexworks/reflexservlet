@@ -66,6 +66,7 @@ public class WsseUtil {
 	
 	/** Set-Cookie */
 	public static final String SET_COOKIE = "Set-Cookie";
+	public static final String SET_COOKIE_LOWER = SET_COOKIE.toLowerCase();
 	/** Set-CookieされたRXIDの接頭辞 */
 	public static final String COOKIE_RXID_PREFIX = RXID + "=";
 	public static final int COOKIE_RXID_PREFIX_LEN = COOKIE_RXID_PREFIX.length();
@@ -763,8 +764,17 @@ public class WsseUtil {
 		if (headers == null) {
 			return null;
 		}
-		String rxid = null;
 		List<String> cookies = headers.get(SET_COOKIE);
+		String rxid = getRXIDFromSetCookies(cookies);
+		if (StringUtils.isBlank(rxid)) {
+			cookies = headers.get(SET_COOKIE_LOWER);
+			rxid = getRXIDFromSetCookies(cookies);
+		}
+		return rxid;
+	}
+	
+	private String getRXIDFromSetCookies(List<String> cookies) {
+		String rxid = null;
 		if (cookies != null) {
 			for (String cookie : cookies) {
 				if (cookie.startsWith(COOKIE_RXID_PREFIX)) {
