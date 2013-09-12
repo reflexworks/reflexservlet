@@ -33,7 +33,7 @@ public class URLDecoderPlus {
 	public static String urlDecode(String source, String encoding) {
 		String ret = null;
 		// URLデコードすると、+はスペースに変換されるため、+を"%2b"に置き換えておく。
-		if (source != null) {
+		if (source != null && !"".equals(source)) {
 			String tmpSource = source.replaceAll("\\+", "%2b");
 			try {
 				ret = URLDecoder.decode(tmpSource, encoding);
