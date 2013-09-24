@@ -40,7 +40,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, String model_package) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		return util.getEntity(req, model_package);
 	}
 
@@ -72,7 +72,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, Map<String, String> model_package) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		return util.getEntity(req, model_package);
 	}
 		
@@ -105,7 +105,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, IResourceMapper rxmapper) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		return util.getEntity(req, rxmapper);
 	}
 		
@@ -137,7 +137,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(String body, String model_package, boolean useJson) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
 		return util.getEntity(body, rxmapper, useJson);
 	}
@@ -154,7 +154,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public Object getEntity(String body, Map<String, String> model_package,
 			boolean useJson) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
 		return util.getEntity(body, rxmapper, useJson);
 	}
@@ -170,7 +170,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		return util.getEntity(body, rxmapper, useJson);
 	}
 

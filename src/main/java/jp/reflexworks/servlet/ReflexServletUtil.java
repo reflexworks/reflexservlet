@@ -43,7 +43,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, String model_package) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
 		return this.getEntity(req, rxmapper);
 	}
@@ -55,7 +55,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, Map<String, String> model_package) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
 		return this.getEntity(req, rxmapper);
 	}
@@ -67,7 +67,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, IResourceMapper rxmapper) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		// リクエストデータ受信
 		InputStream inputStream = req.getInputStream();
 		Object result = null;
@@ -128,7 +128,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		Object result = null;
 		boolean changeObj = false;
 
