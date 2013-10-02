@@ -237,16 +237,20 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param format 1:XML, 2:JSON, 3:MessagePack
 	 * @param rxmapper ResourceMapper
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 */
+	//public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
+	//		Object entities, int format, IResourceMapper rxmapper, 
+	//		int statusCode, String callback, boolean isGZip, boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			int statusCode, String callback, boolean isGZip, boolean isStrict) 
+			int statusCode, boolean isGZip, boolean isStrict) 
 	throws IOException {
-		doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
-				isGZip, isStrict);
+		//doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
+		//		isGZip, isStrict);
+		doResponse(req, resp, entities, format, rxmapper, statusCode, 
+				isGZip, isStrict, null);
 	}
 	
 	/**
@@ -258,14 +262,16 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param rxmapper ResourceMapper
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param contentType Content-Type
-	 * @param callback callback関数
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 */
+	//public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
+	//		Object entities, int format, IResourceMapper rxmapper, 
+	//		int statusCode, String contentType, String callback, 
+	//		boolean isGZip, boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			int statusCode, String contentType, String callback, 
-			boolean isGZip, boolean isStrict) 
+			int statusCode, boolean isGZip, boolean isStrict, String contentType) 
 	throws IOException {
 		OutputStream out = null;
 		if (isGZip && isGZip(req)) {
@@ -366,7 +372,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 			String html, int statusCode, boolean isGZip)
 	throws IOException {
 		//resp.setContentType(CONTENT_TYPE_HTML);
-		doResponse(req, resp, html, 0, null, statusCode, CONTENT_TYPE_HTML, null, isGZip, false);
+		//doResponse(req, resp, html, 0, null, statusCode, CONTENT_TYPE_HTML, null, isGZip, false);
+		doResponse(req, resp, html, 0, null, statusCode, isGZip, false, CONTENT_TYPE_HTML);
 	}
 
 	/**
@@ -377,7 +384,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param resp HttpServletResponse
 	 * @param exception 例外オブジェクト
 	 */
-	public void doErrorPage(HttpServletResponse resp, Throwable exception) throws IOException {
+	public void doErrorPage(HttpServletResponse resp, Throwable exception) 
+	throws IOException {
 
 		int httpStatus = HttpStatus.SC_INTERNAL_SERVER_ERROR;
 		//resp.setStatus(httpStatus);
@@ -507,7 +515,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req HttpServletRequest
 	 * @param resp HttpServletResponse
 	 */
-	public void doResponseFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	public void doResponseFile(HttpServletRequest req, HttpServletResponse resp) 
+	throws IOException {
 
 		String reqFileTemp = "";
 
