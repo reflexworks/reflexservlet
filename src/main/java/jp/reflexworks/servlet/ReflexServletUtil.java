@@ -17,12 +17,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONException;
 
-import jp.reflexworks.servlet.exception.InvokeException;
-import jp.reflexworks.servlet.util.HttpStatus;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
 import jp.sourceforge.reflex.util.FileUtil;
 import jp.sourceforge.reflex.util.StringUtils;
+import jp.sourceforge.reflex.util.DeflateUtil;
+
+import jp.reflexworks.servlet.exception.InvokeException;
+import jp.reflexworks.servlet.util.HttpStatus;
 
 /**
  * Reflex サーブレットユーティリティ.
@@ -295,7 +297,12 @@ public class ReflexServletUtil implements ReflexServletConst {
 				resp.setContentType(CONTENT_TYPE_MESSAGEPACK);
 			}
 			try {
-				rxmapper.toMessagePack(entities, out);
+				//rxmapper.toMessagePack(entities, out);
+				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
+				byte[] msgData = rxmapper.toMessagePack(entities);
+				DeflateUtil deflateUtil = new DeflateUtil();
+				byte[] deflateData = deflateUtil.deflate(msgData);
+				out.write(deflateData);
 				
 			} finally {
 				try {
@@ -373,7 +380,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	throws IOException {
 		//resp.setContentType(CONTENT_TYPE_HTML);
 		//doResponse(req, resp, html, 0, null, statusCode, CONTENT_TYPE_HTML, null, isGZip, false);
-		doResponse(req, resp, html, 0, null, statusCode, isGZip, false, CONTENT_TYPE_HTML);
+		doResponse(req, resp, html, 0, null, statusCode, isGZip, false, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**
@@ -403,7 +410,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		// レスポンスデータ出力
 		PrintWriter prtout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, ENCODING)));
 
-		resp.setContentType(CONTENT_TYPE_HTML);
+		resp.setContentType(CONTENT_TYPE_HTML_CHARSET);
 
 		prtout.print("<html>");
 		prtout.print(NEWLINE);
