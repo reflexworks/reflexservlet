@@ -238,20 +238,17 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param entities XMLまたはJSONにシリアライズするentity
 	 * @param format 1:XML, 2:JSON, 3:MessagePack
 	 * @param rxmapper ResourceMapper
+	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 */
-	//public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-	//		Object entities, int format, IResourceMapper rxmapper, 
-	//		int statusCode, String callback, boolean isGZip, boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil,
 			int statusCode, boolean isGZip, boolean isStrict) 
 	throws IOException {
-		//doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
-		//		isGZip, isStrict);
-		doResponse(req, resp, entities, format, rxmapper, statusCode, 
+		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
 				isGZip, isStrict, null);
 	}
 	
@@ -262,17 +259,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param entities XMLまたはJSONにシリアライズするentity
 	 * @param format 1:XML, 2:JSON, 3:MessagePack
 	 * @param rxmapper ResourceMapper
+	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param contentType Content-Type
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 */
-	//public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-	//		Object entities, int format, IResourceMapper rxmapper, 
-	//		int statusCode, String contentType, String callback, 
-	//		boolean isGZip, boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil,
 			int statusCode, boolean isGZip, boolean isStrict, String contentType) 
 	throws IOException {
 		OutputStream out = null;
@@ -300,8 +295,12 @@ public class ReflexServletUtil implements ReflexServletConst {
 				//rxmapper.toMessagePack(entities, out);
 				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
 				byte[] msgData = rxmapper.toMessagePack(entities);
-				DeflateUtil deflateUtil = new DeflateUtil();
-				byte[] deflateData = deflateUtil.deflate(msgData);
+				byte[] deflateData = null;
+				if (deflateUtil != null) {
+					deflateData = deflateUtil.deflate(msgData);
+				} else {
+					deflateData = DeflateUtil.deflateOneTime(msgData);
+				}
 				out.write(deflateData);
 				
 			} finally {
@@ -327,22 +326,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 						resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, 
 								HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
 					}
-		
-					// コールバック指定の場合は付加する -> 2013.5.20 廃止
-					//if (callback != null && callback.length() > 0) {
-					//	prtout.write(callback);
-					//	prtout.write("(");
-					//}
 					
 					// JSON中身
 					if (entities != null) {
 						rxmapper.toJSON(entities, prtout);
 					}
-		
-					// コールバック指定の場合は付加する -> 2013.5.20 廃止
-					//if (callback != null && callback.length() > 0) {
-					//	prtout.write(");");
-					//}
 		
 				} else {
 					// XMLヘッダー出力
@@ -378,9 +366,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
 			String html, int statusCode, boolean isGZip)
 	throws IOException {
-		//resp.setContentType(CONTENT_TYPE_HTML);
-		//doResponse(req, resp, html, 0, null, statusCode, CONTENT_TYPE_HTML, null, isGZip, false);
-		doResponse(req, resp, html, 0, null, statusCode, isGZip, false, CONTENT_TYPE_HTML_CHARSET);
+		doResponse(req, resp, html, 0, null, null, statusCode, isGZip, 
+				false, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**
@@ -395,7 +382,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 	throws IOException {
 
 		int httpStatus = HttpStatus.SC_INTERNAL_SERVER_ERROR;
-		//resp.setStatus(httpStatus);
 		if (exception instanceof InvokeException) {
 			httpStatus = ((InvokeException)exception).getHttpStatus();
 		}

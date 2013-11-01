@@ -12,6 +12,7 @@ import jp.reflexworks.servlet.ReflexServletUtil;
 import jp.reflexworks.servlet.ReflexServletConst;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
+import jp.sourceforge.reflex.util.DeflateUtil;
 
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.json.JSONException;
@@ -511,6 +512,7 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	 * @param entities XMLまたはJSONにシリアライズするentity
 	 * @param format 0:XML, 1:JSON, 2:MessagePack
 	 * @param rxmapper Resource Mapper
+	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param isGZip GZIP圧縮する場合true
 	 * @param isStrict 名前空間を出力する場合true
@@ -520,11 +522,12 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	//		int statusCode, String callback, boolean isGZip, boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil,
 			int statusCode, boolean isGZip, boolean isStrict) 
 	throws IOException {
 		//doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback, 
 		//		isGZip, isStrict);
-		doResponse(req, resp, entities, format, rxmapper, statusCode, 
+		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
 				isGZip, isStrict, null);
 	}
 
@@ -539,6 +542,7 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	 * @param entities XMLまたはJSONにシリアライズするentity
 	 * @param format 0:XML, 1:JSON, 2:MessagePack
 	 * @param rxmapper Resource Mapper
+	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param contentType Content-Type
 	 * @param isGZip GZIP圧縮する場合true
@@ -550,9 +554,10 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	//		boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil,
 			int statusCode, boolean isGZip, boolean isStrict, String contentType) 
 	throws IOException {
-		util.doResponse(req, resp, entities, format, rxmapper, 
+		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil, 
 				statusCode, isGZip, isStrict, contentType);
 	}
 
@@ -575,13 +580,14 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil,
 			int statusCode, String contentType, String callback, boolean isGZip, 
 			boolean isStrict) 
 	throws IOException {
 		// callbackは廃止
 		//util.doResponse(req, resp, entities, format, rxmapper, 
 		//		statusCode, contentType, callback, isGZip, isStrict);
-		util.doResponse(req, resp, entities, format, rxmapper, 
+		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
 				statusCode, isGZip, isStrict, contentType);
 	}
 
