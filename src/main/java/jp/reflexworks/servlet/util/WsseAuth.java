@@ -5,6 +5,8 @@ import java.io.Serializable;
 public class WsseAuth implements Serializable {
 
 	private static final long serialVersionUID = 1L;
+	
+	//public static enum AuthFormat {WSSE, RXID, ATTRIBUTE, SESSION};
 
 	/** ユーザ名 */
 	public String username;
@@ -17,11 +19,13 @@ public class WsseAuth implements Serializable {
 	/** パスワード */
 	public String password;
 	/** ワンタイムかどうか */
-	public boolean isOnetime;
+	//public boolean isOnetime;
 	/** RXIDかどうか */
 	public boolean isRxid;
 	/** Cookieに設定されているかどうか */
-	public boolean isCookie;
+	//public boolean isCookie;
+	/** WsseAuth形式 */
+	//public AuthFormat authFormat;
 	
 	public WsseAuth(String username, String passwordDigest, String nonce, 
 			String created) {
@@ -35,7 +39,7 @@ public class WsseAuth implements Serializable {
 	public String toString() {
 		return "WsseAuth [username=" + username + ", passwordDigest="
 				+ passwordDigest + ", nonce=" + nonce + ", created="
-				+ created + ", isOnetime=" + isOnetime + ", isRxid=" + isRxid
+				+ created + ", isRxid=" + isRxid
 				+ "]";
 	}
 

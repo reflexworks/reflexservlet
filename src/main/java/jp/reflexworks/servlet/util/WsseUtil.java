@@ -1,22 +1,19 @@
 package jp.reflexworks.servlet.util;
 
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.net.HttpURLConnection;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.TimeZone;
 import java.util.Map;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.Cookie;
 
 import jp.sourceforge.reflex.util.DateUtil;
 import jp.sourceforge.reflex.util.StringUtils;
@@ -41,35 +38,39 @@ public class WsseUtil {
 	public static final String NONCE = "Nonce";
 	/** Created */
 	public static final String CREATED = "Created";
+	/** RXIDヘッダのキー */
+	public static final String HEADER_RXID = "X-RXID";
 	/** ハッシュ関数 */
 	//public static final String HASH_ALGORITHM = "SHA-1";
 	public static final String HASH_ALGORITHM = "SHA-256";
+	/** 乱数生成のための関数 */
+	public static final String RANDOM_ALGORITHM = "SHA1PRNG";
 	
 	// URLパラメータの項目名
 	/** URLパラメータのUsername　*/
-	public static final String PARAM_USER = "_user";
+	//public static final String PARAM_USER = "_user";
 	/** URLパラメータのPasswordDigest　*/
-	public static final String PARAM_PASSWORDDIGEST = "_digest";
+	//public static final String PARAM_PASSWORDDIGEST = "_digest";
 	/** URLパラメータのNonce　*/
-	public static final String PARAM_NONCE = "_nonce";
+	//public static final String PARAM_NONCE = "_nonce";
 	/** URLパラメータのCreated　*/
-	public static final String PARAM_CREATED = "_created";
+	//public static final String PARAM_CREATED = "_created";
 	
 	// Cookieの項目名
 	/** RXID */
 	public static final String RXID = "_RXID";	// URLパラメータのみ
 	/** SSID */
-	public static final String SSID = "SSID";	// CookieにセットするRXID
+	//public static final String SSID = "SSID";	// CookieにセットするRXID
 	
 	/** エンコード */
 	public static final String ENCODING = "UTF-8";
 	
 	/** Set-Cookie */
-	public static final String SET_COOKIE = "Set-Cookie";
-	public static final String SET_COOKIE_LOWER = SET_COOKIE.toLowerCase();
+	//public static final String SET_COOKIE = "Set-Cookie";
+	//public static final String SET_COOKIE_LOWER = SET_COOKIE.toLowerCase();
 	/** Set-CookieされたRXIDの接頭辞 */
-	public static final String COOKIE_RXID_PREFIX = RXID + "=";
-	public static final int COOKIE_RXID_PREFIX_LEN = COOKIE_RXID_PREFIX.length();
+	//public static final String COOKIE_RXID_PREFIX = RXID + "=";
+	//public static final int COOKIE_RXID_PREFIX_LEN = COOKIE_RXID_PREFIX.length();
 	
 	/** RXID Delimiter **/
 	private static final String RXID_DELIMITER = "-";
@@ -82,8 +83,8 @@ public class WsseUtil {
 	 * @param password パスワード
 	 * @return RequestHeaderに設定するWSSE情報
 	 */
-	public String getWsseHeaderValue(String username, String password) {
-		return getWsseHeaderValue(getWsse(username, password));
+	public String createWsseHeaderValue(String username, String password) {
+		return getWsseHeaderValue(createWsse(username, password, null));
 	}
 
 	/**
@@ -125,15 +126,18 @@ public class WsseUtil {
 	 * @param password パスワード
 	 * @return URLパラメータに設定するWSSE情報
 	 */
+	/*
 	public String getWsseUrlParam(String username, String password) {
 		return getWsseUrlParam(getWsse(username, password));
 	}
+	*/
 
 	/**
 	 * WSSE文字列を作成します(URLパラメータ用)
 	 * @param auth WSSE認証情報
 	 * @return URLパラメータに設定するWSSE情報
 	 */
+	/*
 	public String getWsseUrlParam(WsseAuth auth) {
 		if (auth == null) {
 			return "";
@@ -158,39 +162,57 @@ public class WsseUtil {
 		
 		return buf.toString();
 	}
+	*/
 	
+	/*
 	private String urlEncode(String str) {
 		try {
 			return URLEncoder.encode(str, ENCODING);
 		} catch (UnsupportedEncodingException e) {}
 		return str;
 	}
+	*/
 
 	/**
 	 * WSSE認証情報を作成します
 	 * @param username ユーザ名
 	 * @param password パスワード
+	 * @param apiKey APIKey (RXIDの場合APIKeyを指定します。)
 	 */
-	public WsseAuth getWsse(String username, String password) {
+	public WsseAuth createWsse(String username, String password, String apiKey) {
 		WsseAuth auth = null;
 		
 		byte[] nonceB = new byte[8];
 		try {
-			SecureRandom.getInstance("SHA1PRNG").nextBytes(nonceB);
+			SecureRandom.getInstance(RANDOM_ALGORITHM).nextBytes(nonceB);
 
 			Date now = new Date();
 			String created = DateUtil.getDateTime(now);
 
 			byte[] createdB = created.getBytes(ENCODING);
 			byte[] passwordB = password.getBytes(ENCODING);
+			byte[] apiKeyB = null;
+			if (apiKey != null) {
+				apiKeyB = apiKey.getBytes(ENCODING);
+			}
 
-			byte[] v = new byte[nonceB.length + createdB.length + passwordB.length];
-			System.arraycopy(nonceB, 0, v, 0, nonceB.length);
-			System.arraycopy(createdB, 0, v, nonceB.length, createdB.length);
-			System.arraycopy(passwordB, 0, v, nonceB.length + createdB.length, 
+			int len = nonceB.length + createdB.length + passwordB.length;
+			int apiKeyLen = 0;
+			if (apiKey != null) {
+				// APIKeyを含む
+				apiKeyLen = apiKeyB.length;
+				len += apiKeyLen;
+			}
+			byte[] v = new byte[len];
+			if (apiKey != null) {
+				// APIKeyを含む
+				System.arraycopy(apiKeyB, 0, v, 0, apiKeyLen);
+			}
+			System.arraycopy(nonceB, 0, v, apiKeyLen, nonceB.length);
+			System.arraycopy(createdB, 0, v, apiKeyLen + nonceB.length, createdB.length);
+			System.arraycopy(passwordB, 0, v, apiKeyLen + nonceB.length + createdB.length, 
 					passwordB.length);
 
-			//MessageDigest md = MessageDigest.getInstance("SHA1");
 			MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
 			md.update(v);
 			byte[] digest = md.digest();
@@ -213,14 +235,17 @@ public class WsseUtil {
 	 * リクエストからWSSE認証を行います
 	 * @param req リクエスト
 	 * @param password パスワード
+	 * @param apiKey APIKey
 	 * @return WSSE認証OKの場合true、エラーの場合false
 	 */
-	public boolean wsseAuthentication(HttpServletRequest req, String password) {
+	public boolean wsseAuthentication(HttpServletRequest req, String password,
+			String apiKey) {
 		// 認証情報の取り出し
-		WsseAuth auth = getWsseAuth(req, true);	// SSID有効
+		//WsseAuth auth = getWsseAuth(req, true);	// SSID有効
+		WsseAuth auth = getWsseAuth(req);	// SSID有効
 		
 		// 認証チェック
-		return checkAuth(auth, password);
+		return checkAuth(auth, password, apiKey);
 	}
 	
 	/**
@@ -228,7 +253,16 @@ public class WsseUtil {
 	 * @param req リクエスト
 	 * @return WSSE認証情報
 	 */
-	public WsseAuth getWsseAuth(HttpServletRequest req, boolean enableSsid) {
+	//public WsseAuth getWsseAuth(HttpServletRequest req, boolean enableSsid) {
+	public WsseAuth getWsseAuth(HttpServletRequest req) {
+		// ヘッダから認証情報を取得
+		WsseAuth auth = getWsseAuthFromHeader(req);
+		if (auth == null) {
+			// URLパラメータから認証情報を取得
+			auth = parseWSSEparam(req);
+		}
+		
+		/*
 		WsseAuth auth = null;
 		String wsse = req.getHeader(WSSE);
 		if (wsse != null) {
@@ -246,8 +280,26 @@ public class WsseUtil {
 			// Cookieから認証情報を取得
 			auth = parseWSSEcookie(req, enableSsid);
 		}
+		*/
 		
 		return auth;
+	}
+
+	/**
+	 * リクエストヘッダからWSSE認証情報を取り出します
+	 * @param header リクエストヘッダに指定されたWSSE文字列
+	 * @return WSSE認証情報
+	 */
+	public WsseAuth getWsseAuthFromHeader(HttpServletRequest req) {
+		String value = req.getHeader(WSSE);
+		if (value != null) {
+			return parseWSSEheader(value);
+		}
+		value = req.getHeader(HEADER_RXID);
+		if (value != null) {
+			return parseRXID(value);
+		}
+		return null;
 	}
 
 	/**
@@ -300,7 +352,7 @@ public class WsseUtil {
 				(authCreated != null)) {
 			WsseAuth auth = new WsseAuth(authUsername, authPassworddigest, 
 					authNonce, authCreated);
-			auth.isOnetime = true;	// WSSE文字列もワンタイムチェックを実施する。
+			//auth.isOnetime = true;	// WSSE文字列もワンタイムチェックを実施する。
 			return auth;
 		}
 		
@@ -313,6 +365,15 @@ public class WsseUtil {
 	 * @return WSSE認証情報
 	 */
 	public WsseAuth parseWSSEparam(HttpServletRequest req) {
+		WsseAuth auth = null;
+		String rxid = req.getParameter(RXID);
+		if (rxid != null) {
+			//auth = parseRXID(rxid, true);
+			auth = parseRXID(rxid);
+		}
+		return auth;
+		
+		/*
 		String authUsername = req.getParameter(PARAM_USER);
 		String authPassworddigest = req.getParameter(PARAM_PASSWORDDIGEST);
 		String authNonce = req.getParameter(PARAM_NONCE);
@@ -338,6 +399,7 @@ public class WsseUtil {
 		}
 		
 		return auth;
+		*/
 	}
 
 	/**
@@ -345,6 +407,7 @@ public class WsseUtil {
 	 * @param req リクエスト
 	 * @return WSSE認証情報
 	 */
+	/*
 	public WsseAuth parseWSSEcookie(HttpServletRequest req, boolean enableSsid) {
 		WsseAuth auth = null;
 		Cookie cookie = null;
@@ -373,12 +436,14 @@ public class WsseUtil {
 
 		return auth;
 	}
+	*/
 	
 	/**
 	 * リクエストの属性(Attribute)からWSSE認証情報を取り出します
 	 * @param req リクエスト
 	 * @return WSSE認証情報
 	 */
+	/*
 	public WsseAuth parseWSSEAttribute(HttpServletRequest req, boolean enableSsid) {
 		Object rxidObj = null;
 		if (enableSsid) {
@@ -393,15 +458,18 @@ public class WsseUtil {
 		}
 		return null;
 	}
+	*/
 	
 	/**
 	 * RXID文字列からWSSE認証情報を作成します
 	 * @param value RXID文字列
 	 * @return WSSE認証情報
 	 */
+	/*
 	public WsseAuth parseRXID(String value) {
 		return parseRXID(value, true);
 	}
+	*/
 	
 	/**
 	 * RXID文字列からWSSE認証情報を作成します
@@ -409,7 +477,8 @@ public class WsseUtil {
 	 * @param isRxid ワンタイム利用かどうか
 	 * @return WSSE認証情報
 	 */
-	public WsseAuth parseRXID(String value, boolean isRxid) {
+	//public WsseAuth parseRXID(String value, boolean isRxid) {
+	public WsseAuth parseRXID(String value) {
 		WsseAuth auth = null;
 		if (value != null) {
 			/*
@@ -448,13 +517,14 @@ public class WsseUtil {
 							passwordDigestStr != null && username != null) {
 						auth = new WsseAuth(username, passwordDigestStr, 
 								nonceStr, createdStr);
-						auth.isOnetime = true;
+						//auth.isOnetime = true;
 					}
 				} catch (ParseException e) {}	// Do nothing.
 			}
 		}
 		
-		if (auth != null && isRxid) {
+		//if (auth != null && isRxid) {
+		if (auth != null) {
 			auth.isRxid = true;
 		}
 		return auth;
@@ -471,24 +541,24 @@ public class WsseUtil {
 		}
 
 		StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if       (c == '@') c = '!';
-            else if       (c == '!') c = '@';
-            else if       (c == '/') c = '~';
-            else if       (c == '~') c = '/';
-            else if       (c == '+') c = '*';
-            else if       (c == '*') c = '+';
-            else if       (c >= 'a' && c <= 'm') c += 13;
-            else if  (c >= 'A' && c <= 'M') c += 13;
-            else if  (c >= 'n' && c <= 'z') c -= 13;
-            else if  (c >= 'N' && c <= 'Z') c -= 13;
-
-            if       (c != '=')  {
-            	sb.append(c);
-            }
-        }
-        return sb.toString();
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c == '@') c = '!';
+			else if (c == '!') c = '@';
+			else if (c == '/') c = '~';
+			else if (c == '~') c = '/';
+			else if (c == '+') c = '*';
+			else if (c == '*') c = '+';
+			else if (c >= 'a' && c <= 'm') c += 13;
+			else if (c >= 'A' && c <= 'M') c += 13;
+			else if (c >= 'n' && c <= 'z') c -= 13;
+			else if (c >= 'N' && c <= 'Z') c -= 13;
+			
+			if (c != '=') {
+				sb.append(c);
+			}
+		}
+		return sb.toString();
 	}
 
 	/**
@@ -555,6 +625,7 @@ public class WsseUtil {
 	 * @param req リクエスト
 	 * @return RXID文字列
 	 */
+	/*
 	public String getRXIDString(HttpServletRequest req) {
 		Cookie cookie = getRXID(req);
 		String rxidStr = null;
@@ -563,64 +634,77 @@ public class WsseUtil {
 		}
 		return rxidStr;
 	}
+	*/
 	
 	/**
 	 * RXID(WSSE情報)が設定されているCookieを取得します
 	 * @param req リクエスト
 	 * @return RXID(WSSE情報)が設定されているCookie
 	 */
+	/*
 	public Cookie getRXID(HttpServletRequest req) {
 		return getCookie(req, RXID);
 	}
+	*/
 	
 	/**
 	 * SSID(WSSE情報)が設定されているCookieを取得します
 	 * @param req リクエスト
 	 * @return SSID(WSSE情報)が設定されているCookie
 	 */
+	/*
 	public Cookie getSSID(HttpServletRequest req) {
 		return getCookie(req, SSID);
 	}
+	*/
 
 	/**
 	 * RXID文字列からCookieを作成します
 	 * @param rxidStr RXID文字列
 	 * @return RXIDを設定したCookie
 	 */
+	/*
 	public Cookie getRXID(String rxidStr) {
 		return new Cookie(RXID, rxidStr);
 	}
+	*/
 
 	/**
 	 * SSID文字列からCookieを作成します
 	 * @param rxidStr SSID文字列
 	 * @return SSIDを設定したCookie
 	 */
+	/*
 	public Cookie getSSID(String rxidStr) {
 		return new Cookie(SSID, rxidStr);
 	}
+	*/
 	
 	/**
 	 * WSSE認証情報からRXIDを設定したCookieを作成します
 	 * @param auth WSSE認証情報
 	 * @return RXIDを設定したCookie
 	 */
+	/*
 	public Cookie getRXID(WsseAuth auth) {
 		// base64エンコード
 		String rxidStr = getRXIDString(auth);
 		return getRXID(rxidStr);
 	}
+	*/
 
 	/**
 	 * WSSE認証情報からSSIDを設定したCookieを作成します
 	 * @param auth WSSE認証情報
 	 * @return SSIDを設定したCookie
 	 */
+	/*
 	public Cookie getSSID(WsseAuth auth) {
 		// base64エンコード
 		String rxidStr = getRXIDString(auth);
 		return getSSID(rxidStr);
 	}
+	*/
 	
 	/**
 	 * WSSE認証情報からRXID文字列を作成します
@@ -659,13 +743,14 @@ public class WsseUtil {
 	}
 	
 	/**
-	 * ユーザ名とパスワードからRXID文字列を作成します.
+	 * ユーザ名とパスワードとAPIKeyからRXID文字列を作成します.
 	 * @param username ユーザ名
 	 * @param password パスワード
+	 * @param apiKey APIKey
 	 * @return RXID文字列
 	 */
-	public String createRXIDString(String username, String password) {
-		WsseAuth auth = getWsse(username, password);
+	public String createRXIDString(String username, String password, String apiKey) {
+		WsseAuth auth = createWsse(username, password, apiKey);
 		return getRXIDString(auth);
 	}
 	
@@ -675,35 +760,57 @@ public class WsseUtil {
 	 * @param password パスワード
 	 * @return RXID Cookieオブジェクト
 	 */
+	/*
 	public Cookie createRXID(String username, String password) {
 		WsseAuth auth = getWsse(username, password);
 		String rxidString = getRXIDString(auth);
 		return getRXID(rxidString);
 	}
+	*/
 
 	/**
 	 * WSSE認証チェック
 	 * @param auth WSSE認証情報
 	 * @param password パスワード
+	 * @param apiKey APIKey
 	 * @return WSSE認証OKの場合true、エラーの場合false
 	 */
-	public boolean checkAuth(WsseAuth auth, String password) {
+	public boolean checkAuth(WsseAuth auth, String password, String apiKey) {
 		if (auth == null) {
+			return false;
+		}
+		if (auth.isRxid && apiKey == null) {
 			return false;
 		}
 
 		try {
 			//入力されたパラメータを取得
-			byte[] digestB = Base64.decodeBase64(auth.passwordDigest.getBytes());
-			byte[] nonceB = Base64.decodeBase64(auth.nonce.getBytes());
+			byte[] digestB = Base64.decodeBase64(auth.passwordDigest.getBytes(ENCODING));
+			byte[] nonceB = Base64.decodeBase64(auth.nonce.getBytes(ENCODING));
 			byte[] createdB = auth.created.getBytes(ENCODING);
+			byte[] apiKeyB = null;
+			if (auth.isRxid) {
+				apiKeyB = apiKey.getBytes(ENCODING);
+			}
 
-			//指定パスワードからdigestを生成        	
+			//指定パスワードからdigestを生成
 			byte[] passwordB = password.getBytes(ENCODING);
-			byte[] v = new byte[nonceB.length + createdB.length + passwordB.length];
-			System.arraycopy(nonceB, 0, v, 0, nonceB.length);
-			System.arraycopy(createdB, 0, v, nonceB.length, createdB.length);
-			System.arraycopy(passwordB, 0, v, nonceB.length + createdB.length, 
+			
+			int len = nonceB.length + createdB.length + passwordB.length;
+			int apiKeyLen = 0;
+			if (auth.isRxid) {
+				// APIKeyを含む
+				apiKeyLen = apiKeyB.length;
+				len += apiKeyLen;
+			}
+			byte[] v = new byte[len];
+			if (auth.isRxid) {
+				// APIKeyを含む
+				System.arraycopy(apiKeyB, 0, v, 0, apiKeyB.length);
+			}
+			System.arraycopy(nonceB, 0, v, apiKeyLen, nonceB.length);
+			System.arraycopy(createdB, 0, v, apiKeyLen + nonceB.length, createdB.length);
+			System.arraycopy(passwordB, 0, v, apiKeyLen + nonceB.length + createdB.length, 
 					passwordB.length);
 
 			//MessageDigest md = MessageDigest.getInstance("SHA1");
@@ -726,7 +833,8 @@ public class WsseUtil {
 
 		return false;
 	}
-		
+	
+	/*
 	private Cookie getCookie(HttpServletRequest req, String key) {
 		if (key == null) {
 			return null;
@@ -741,12 +849,14 @@ public class WsseUtil {
 		}
 		return null;
 	}
+	*/
 	
 	/**
 	 * URLフェッチ実行時、Set-CookieされたRXIDを取得します.
 	 * @param conn HttpURLConnection
 	 * @return RXID
 	 */
+	/*
 	public String getRXIDFromConnection(HttpURLConnection conn) {
 		if (conn == null) {
 			return null;
@@ -754,12 +864,25 @@ public class WsseUtil {
 		Map<String, List<String>> headers = conn.getHeaderFields();
 		return getRXIDFromHeaders(headers);
 	}
+	*/
 	
 	/**
-	 * URLフェッチ実行時、Set-CookieされたRXIDを取得します.
+	 * URLフェッチ実行時、レスポンスヘッダに設定されたRXIDを取得します.
 	 * @param headers レスポンスヘッダ
 	 * @return RXID
 	 */
+	public String getRXIDFromHeaders(Map<String, List<String>> headers) {
+		if (headers == null) {
+			return null;
+		}
+		List<String> rxids = headers.get(HEADER_RXID);
+		if (rxids != null && rxids.size() > 0) {
+			return rxids.get(0);
+		}
+		return null;
+	}
+	
+	/*
 	public String getRXIDFromHeaders(Map<String, List<String>> headers) {
 		if (headers == null) {
 			return null;
@@ -772,7 +895,7 @@ public class WsseUtil {
 		}
 		return rxid;
 	}
-	
+
 	private String getRXIDFromSetCookies(List<String> cookies) {
 		String rxid = null;
 		if (cookies != null) {
@@ -791,6 +914,7 @@ public class WsseUtil {
 		}
 		return rxid;
 	}
+	*/
 
 	/**
 	 * created範囲チェック

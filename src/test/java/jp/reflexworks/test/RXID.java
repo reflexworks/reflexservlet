@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 
 import jp.reflexworks.servlet.util.WsseAuth;
 import jp.reflexworks.servlet.util.WsseUtil;
@@ -21,11 +20,12 @@ public class RXID {
 		String password = "passwordhashXXXXX";
 		//String password = "";
 		//String password = "noriko2010";
+		String apiKey = "ApiKey12345X";
 		
 		WsseUtil wsseUtil = new WsseUtil();
 
 		try {
-			String wsse = wsseUtil.getWsseHeaderValue(username, password);
+			String wsse = wsseUtil.createWsseHeaderValue(username, password);
 	
 			System.out.println("wsse=" + wsse);
 	
@@ -34,9 +34,9 @@ public class RXID {
 			String rxid = getRXIDString(auth);
 			WsseAuth wsseauth = parseRXID(rxid);
 			
-			boolean checkauth = wsseUtil.checkAuth(wsseauth, password);
+			boolean checkauth = wsseUtil.checkAuth(wsseauth, password, apiKey);
 			
-			boolean checkauth256 = wsseUtil.checkAuth(auth, password);
+			boolean checkauth256 = wsseUtil.checkAuth(auth, password, apiKey);
 			
 			System.out.println("rxid=" + rxid);
 			System.out.println(wsseauth.toString());
@@ -44,14 +44,26 @@ public class RXID {
 			System.out.println("checkauth-256=" + checkauth256);
 	
 			// 旧RXIDのチェック -> 旧で無くなった
+			// APIKey対応のためcheck=falseになる。
 			String rxid2 = wsseUtil.getRXIDString(wsseauth);
 			WsseAuth wsseauth2 = wsseUtil.parseRXID(rxid2);
-			boolean checkauth2 = wsseUtil.checkAuth(wsseauth, password);
-	
+			boolean checkauth2 = wsseUtil.checkAuth(wsseauth2, password, apiKey);
+
 			System.out.println("[WsseUtil]");
 			System.out.println("rxid=" + rxid2);
 			System.out.println(wsseauth2.toString());
 			System.out.println("checkauth=" + checkauth2);
+			
+			// RXIDはAPIKey付きで作成する必要がある。
+			String rxid3 = wsseUtil.createRXIDString(username, password, apiKey);
+			WsseAuth wsseauth3 = wsseUtil.parseRXID(rxid3);
+			boolean checkauth3 = wsseUtil.checkAuth(wsseauth3, password, apiKey);
+
+			System.out.println("[RXID with APIKey]");
+			System.out.println("rxid=" + rxid3);
+			System.out.println(wsseauth3.toString());
+			System.out.println("checkauth=" + checkauth3);
+			
 			
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -81,7 +93,7 @@ public class RXID {
 		int p1 = value.indexOf("-");
 		if (p1<0) {
 			// 旧rxid
-			return new WsseUtil().parseRXID(value,true);
+			return new WsseUtil().parseRXID(value);
 		}else {
 		
 		int p2 = p1+value.substring(p1+1).indexOf("-")+1;
@@ -93,7 +105,7 @@ public class RXID {
 		String username = rot13(value.substring(p3+1)); 
 
 		WsseAuth wsseauth = new WsseAuth(username, passwordDigestStr, nonceStr, createdStr);
-		wsseauth.isOnetime = true;
+		//wsseauth.isOnetime = true;
 		return wsseauth;
 		}
 	}
