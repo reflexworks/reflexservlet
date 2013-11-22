@@ -16,7 +16,6 @@ import java.util.logging.Logger;
 import javax.servlet.http.HttpServletRequest;
 
 import jp.sourceforge.reflex.util.DateUtil;
-import jp.sourceforge.reflex.util.StringUtils;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -84,7 +83,7 @@ public class WsseUtil {
 	 * @return RequestHeaderに設定するWSSE情報
 	 */
 	public String createWsseHeaderValue(String username, String password) {
-		return getWsseHeaderValue(createWsse(username, password, null));
+		return getWsseHeaderValue(createWsseAuth(username, password));
 	}
 
 	/**
@@ -177,9 +176,18 @@ public class WsseUtil {
 	 * WSSE認証情報を作成します
 	 * @param username ユーザ名
 	 * @param password パスワード
+	 */
+	public WsseAuth createWsseAuth(String username, String password) {
+		return createRxidAuth(username, password, null);
+	}
+
+	/**
+	 * WSSE認証情報を作成します
+	 * @param username ユーザ名
+	 * @param password パスワード
 	 * @param apiKey APIKey (RXIDの場合APIKeyを指定します。)
 	 */
-	public WsseAuth createWsse(String username, String password, String apiKey) {
+	public WsseAuth createRxidAuth(String username, String password, String apiKey) {
 		WsseAuth auth = null;
 		
 		byte[] nonceB = new byte[8];
@@ -750,7 +758,7 @@ public class WsseUtil {
 	 * @return RXID文字列
 	 */
 	public String createRXIDString(String username, String password, String apiKey) {
-		WsseAuth auth = createWsse(username, password, apiKey);
+		WsseAuth auth = createRxidAuth(username, password, apiKey);
 		return getRXIDString(auth);
 	}
 	
