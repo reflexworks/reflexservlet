@@ -55,15 +55,14 @@ public class RXID {
 			System.out.println("checkauth=" + checkauth2);
 			
 			// RXIDはAPIKey付きで作成する必要がある。
+			System.out.println("--- RXID with APIKey ---");
+			System.out.println("username=" + username + ", password=" + password + ", apiKey=" + apiKey);
 			String rxid3 = wsseUtil.createRXIDString(username, password, apiKey);
-			WsseAuth wsseauth3 = wsseUtil.parseRXID(rxid3);
-			boolean checkauth3 = wsseUtil.checkAuth(wsseauth3, password, apiKey);
-
-			System.out.println("[RXID with APIKey]");
 			System.out.println("rxid=" + rxid3);
+			WsseAuth wsseauth3 = wsseUtil.parseRXID(rxid3);
 			System.out.println(wsseauth3.toString());
+			boolean checkauth3 = wsseUtil.checkAuth(wsseauth3, password, apiKey);
 			System.out.println("checkauth=" + checkauth3);
-			
 			
 		} catch (Throwable e) {
 			e.printStackTrace();

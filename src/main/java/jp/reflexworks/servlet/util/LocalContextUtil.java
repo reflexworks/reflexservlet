@@ -16,7 +16,7 @@ import java.util.Properties;
 
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
-
+import jp.sourceforge.reflex.util.StringUtils;
 import jp.reflexworks.servlet.model.webxml.Context__param;
 import jp.reflexworks.servlet.model.webxml.Web__app;
 
@@ -95,7 +95,10 @@ public class LocalContextUtil extends ServletContextUtil {
 	private void setMapConv(Map<String, String> params, String prefix) {
 		for (String name : contextParamMap.keySet()) {
 			if (name.startsWith(prefix)) {
-				params.put(convSystemProp(name), getConv(name));
+				String editKey = convSystemProp(name);
+				if (!StringUtils.isBlank(editKey)) {
+					params.put(editKey, getConv(editKey));
+				}
 			}
 		}
 	}
