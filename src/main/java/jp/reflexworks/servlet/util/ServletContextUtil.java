@@ -34,7 +34,7 @@ public class ServletContextUtil implements ServletContextListener {
 	 * プロパティファイルのパスを以下のnameでweb.xmlに設定してください。
 	 * web.xmlのcontext-paramより、プロパティファイルの値が優先されます。
 	 **/
-	public static final String PARAM_PROPERTY = "context.properties";
+	public static final String PARAM_PROPERTY = "_context.properties";
 	
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private ServletContext servletContext;

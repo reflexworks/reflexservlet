@@ -14,8 +14,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import jp.sourceforge.reflex.util.DateUtil;
+import jp.sourceforge.reflex.util.StringUtils;
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -38,7 +40,11 @@ public class WsseUtil {
 	/** Created */
 	public static final String CREATED = "Created";
 	/** RXIDヘッダのキー */
-	public static final String HEADER_RXID = "X-RXID";
+	public static final String HEADER_AUTHORIZATION = "Authorization";
+	/** RXIDヘッダのキー */
+	public static final String HEADER_AUTHORIZATION_TOKEN = "Token ";
+	/** RXIDヘッダのキー */
+	private static final int HEADER_AUTHORIZATION_TOKEN_LEN = HEADER_AUTHORIZATION_TOKEN.length();
 	/** ハッシュ関数 */
 	//public static final String HASH_ALGORITHM = "SHA-1";
 	public static final String HASH_ALGORITHM = "SHA-256";
@@ -300,12 +306,15 @@ public class WsseUtil {
 	 */
 	public WsseAuth getWsseAuthFromHeader(HttpServletRequest req) {
 		String value = req.getHeader(WSSE);
-		if (value != null) {
+		if (!StringUtils.isBlank(value)) {
 			return parseWSSEheader(value);
 		}
-		value = req.getHeader(HEADER_RXID);
+		value = req.getHeader(HEADER_AUTHORIZATION);
 		if (value != null) {
-			return parseRXID(value);
+			String rxid = extractRXID(value);
+			if (!StringUtils.isBlank(rxid)) {
+				return parseRXID(rxid);
+			}
 		}
 		return null;
 	}
@@ -567,6 +576,31 @@ public class WsseUtil {
 			}
 		}
 		return sb.toString();
+	}
+	
+	/**
+	 * "Token {RXID}"文字列からRXIDを取り出します.
+	 * @param authorizationStr "Token {RXID}"文字列
+	 * @return RXID
+	 */
+	private String extractRXID(String authorizationStr) {
+		if (authorizationStr == null || 
+				!authorizationStr.startsWith(HEADER_AUTHORIZATION_TOKEN)) {
+			return null;
+		}
+		return authorizationStr.substring(HEADER_AUTHORIZATION_TOKEN_LEN);
+	}
+	
+	/**
+	 * RXIDの先頭に"Token "を付けて返却します.
+	 * @param rxid RXID
+	 * @return "Token {RXID}"
+	 */
+	private String editRXIDHeader(String rxid) {
+		if (!StringUtils.isBlank(rxid)) {
+			return HEADER_AUTHORIZATION_TOKEN + rxid;
+		}
+		return null;
 	}
 
 	/**
@@ -883,11 +917,28 @@ public class WsseUtil {
 		if (headers == null) {
 			return null;
 		}
-		List<String> rxids = headers.get(HEADER_RXID);
+		List<String> rxids = headers.get(HEADER_AUTHORIZATION);
 		if (rxids != null && rxids.size() > 0) {
-			return rxids.get(0);
+			String rxid = rxids.get(0);
+			return extractRXID(rxid);
 		}
 		return null;
+	}
+	
+	/**
+	 * レスポンスヘッダにRXIDを設定します.
+	 * <p>
+	 * Authorization: Token {RXID}
+	 * </p>
+	 * @param resp レスポンス
+	 * @param rxid RXID
+	 */
+	public void addRXIDToHeader(HttpServletResponse resp, String rxid) {
+		if (resp == null || StringUtils.isBlank(rxid)) {
+			return;
+		}
+		String headerValue = editRXIDHeader(rxid);
+		resp.addHeader(HEADER_AUTHORIZATION, headerValue);
 	}
 	
 	/*
