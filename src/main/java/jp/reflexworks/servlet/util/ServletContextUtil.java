@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import jp.sourceforge.reflex.util.FileUtil;
+import jp.sourceforge.reflex.util.StringUtils;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -132,11 +133,16 @@ public class ServletContextUtil implements ServletContextListener {
 				isMatch = true;
 				String group1 = matcher.group(1);
 				String propValue = System.getProperty(group1);
-				if (propValue == null) {
-					throw new IllegalArgumentException("System Property ${" + group1 + "} is required.");
+				//if (propValue == null) {
+				//	throw new IllegalArgumentException("System Property ${" + group1 + "} is required.");
+				//}
+				if (!StringUtils.isBlank(propValue)) {
+					ret = ret.replaceAll(REGEX_SYSTEM_PARAM_START + group1 + REGEX_SYSTEM_PARAM_END, 
+							propValue);
+				} else {
+					logger.info("System Property ${" + group1 + "} is required.");
+					ret = null;
 				}
-				ret = ret.replaceAll(REGEX_SYSTEM_PARAM_START + group1 + REGEX_SYSTEM_PARAM_END, 
-						propValue);
 			}
 			if (isMatch) {
 				return ret;
@@ -175,7 +181,10 @@ public class ServletContextUtil implements ServletContextListener {
 				while (enu.hasMoreElements()) {
 					String name = enu.nextElement();
 					if (name.startsWith(prefix)) {
-						params.put(convSystemProp(name), getConv(name));
+						String editKey = convSystemProp(name);
+						if (!StringUtils.isBlank(editKey)) {
+							params.put(editKey, getConv(editKey));
+						}
 					}
 				}
 			}

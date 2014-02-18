@@ -24,12 +24,16 @@ public interface ReflexServletConst {
 	public static final String CONTENT_TYPE_MULTIPART_FORMDATA = "multipart/form-data";
 	/** Content-Type : Text */
 	public static final String CONTENT_TYPE_TEXT = "text/";
+	/** charset : UTF-8 */
+	public static final String CHARSET = ";charset=" + ENCODING;
 	/** Content-Type : HTML */
-	public static final String CONTENT_TYPE_HTML = "text/html;charset=" + ENCODING;
+	public static final String CONTENT_TYPE_HTML = "text/html";
+	/** Content-Type : HTML; charset */
+	public static final String CONTENT_TYPE_HTML_CHARSET = CONTENT_TYPE_HTML + CHARSET;
 	/** Content-Type : Plain Text */
-	public static final String CONTENT_TYPE_PLAIN = "text/plain;charset=" + ENCODING;
-	/** Content Type : multipart/form-data */
-	public static final String CONTENT_TYPE_FORMDATA = "multipart/form-data";
+	public static final String CONTENT_TYPE_PLAIN = "text/plain";
+	/** Content-Type : Plain Text; charset */
+	public static final String CONTENT_TYPE_PLAIN_CHARSET = CONTENT_TYPE_PLAIN + CHARSET;
 	/** Content Type : png */
 	public static final String CONTENT_TYPE_PNG = "image/png";
 	/** Content Type : jpeg */
@@ -53,7 +57,7 @@ public interface ReflexServletConst {
 	public static final String X_REQUESTED_WITH = "X-Requested-With";
 	/** Reqest Header value : XMLHttpRequest */
 	public static final String X_REQUESTED_WITH_WHR = "XMLHttpRequest";
-	/** Reqest Header value : Host */
+	/** Reqest Header : Host */
 	public static final String HEADER_HOST = "Host";
 
 	/** XMLヘッダ */

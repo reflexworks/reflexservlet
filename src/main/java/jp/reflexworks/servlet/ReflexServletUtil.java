@@ -17,12 +17,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.json.JSONException;
 
-import jp.reflexworks.servlet.exception.InvokeException;
-import jp.reflexworks.servlet.util.HttpStatus;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
 import jp.sourceforge.reflex.util.FileUtil;
 import jp.sourceforge.reflex.util.StringUtils;
+import jp.sourceforge.reflex.util.DeflateUtil;
+
+import jp.reflexworks.servlet.exception.InvokeException;
+import jp.reflexworks.servlet.util.HttpStatus;
 
 /**
  * Reflex サーブレットユーティリティ.
@@ -43,7 +45,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, String model_package) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
 		return this.getEntity(req, rxmapper);
 	}
@@ -55,7 +57,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, Map<String, String> model_package) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
 		return this.getEntity(req, rxmapper);
 	}
@@ -67,7 +69,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, IResourceMapper rxmapper) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		// リクエストデータ受信
 		InputStream inputStream = req.getInputStream();
 		Object result = null;
@@ -128,7 +130,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		Object result = null;
 		boolean changeObj = false;
 
@@ -236,17 +238,18 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param entities XMLまたはJSONにシリアライズするentity
 	 * @param format 1:XML, 2:JSON, 3:MessagePack
 	 * @param rxmapper ResourceMapper
+	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			int statusCode, String callback, boolean isGZip, boolean isStrict) 
+			DeflateUtil deflateUtil,
+			int statusCode, boolean isGZip, boolean isStrict) 
 	throws IOException {
-		doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
-				isGZip, isStrict);
+		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
+				isGZip, isStrict, null);
 	}
 	
 	/**
@@ -256,16 +259,16 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param entities XMLまたはJSONにシリアライズするentity
 	 * @param format 1:XML, 2:JSON, 3:MessagePack
 	 * @param rxmapper ResourceMapper
+	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param contentType Content-Type
-	 * @param callback callback関数
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			int statusCode, String contentType, String callback, 
-			boolean isGZip, boolean isStrict) 
+			DeflateUtil deflateUtil,
+			int statusCode, boolean isGZip, boolean isStrict, String contentType) 
 	throws IOException {
 		OutputStream out = null;
 		if (isGZip && isGZip(req)) {
@@ -289,7 +292,16 @@ public class ReflexServletUtil implements ReflexServletConst {
 				resp.setContentType(CONTENT_TYPE_MESSAGEPACK);
 			}
 			try {
-				rxmapper.toMessagePack(entities, out);
+				//rxmapper.toMessagePack(entities, out);
+				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
+				byte[] msgData = rxmapper.toMessagePack(entities);
+				byte[] deflateData = null;
+				if (deflateUtil != null) {
+					deflateData = deflateUtil.deflate(msgData);
+				} else {
+					deflateData = DeflateUtil.deflateOneTime(msgData);
+				}
+				out.write(deflateData);
 				
 			} finally {
 				try {
@@ -314,22 +326,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 						resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, 
 								HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
 					}
-		
-					// コールバック指定の場合は付加する -> 2013.5.20 廃止
-					//if (callback != null && callback.length() > 0) {
-					//	prtout.write(callback);
-					//	prtout.write("(");
-					//}
 					
 					// JSON中身
 					if (entities != null) {
 						rxmapper.toJSON(entities, prtout);
 					}
-		
-					// コールバック指定の場合は付加する -> 2013.5.20 廃止
-					//if (callback != null && callback.length() > 0) {
-					//	prtout.write(");");
-					//}
 		
 				} else {
 					// XMLヘッダー出力
@@ -365,8 +366,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
 			String html, int statusCode, boolean isGZip)
 	throws IOException {
-		//resp.setContentType(CONTENT_TYPE_HTML);
-		doResponse(req, resp, html, 0, null, statusCode, CONTENT_TYPE_HTML, null, isGZip, false);
+		doResponse(req, resp, html, 0, null, null, statusCode, isGZip, 
+				false, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**
@@ -377,10 +378,10 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param resp HttpServletResponse
 	 * @param exception 例外オブジェクト
 	 */
-	public void doErrorPage(HttpServletResponse resp, Throwable exception) throws IOException {
+	public void doErrorPage(HttpServletResponse resp, Throwable exception) 
+	throws IOException {
 
 		int httpStatus = HttpStatus.SC_INTERNAL_SERVER_ERROR;
-		//resp.setStatus(httpStatus);
 		if (exception instanceof InvokeException) {
 			httpStatus = ((InvokeException)exception).getHttpStatus();
 		}
@@ -395,7 +396,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		// レスポンスデータ出力
 		PrintWriter prtout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, ENCODING)));
 
-		resp.setContentType(CONTENT_TYPE_HTML);
+		resp.setContentType(CONTENT_TYPE_HTML_CHARSET);
 
 		prtout.print("<html>");
 		prtout.print(NEWLINE);
@@ -507,7 +508,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req HttpServletRequest
 	 * @param resp HttpServletResponse
 	 */
-	public void doResponseFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+	public void doResponseFile(HttpServletRequest req, HttpServletResponse resp) 
+	throws IOException {
 
 		String reqFileTemp = "";
 

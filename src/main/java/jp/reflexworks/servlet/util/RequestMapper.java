@@ -6,7 +6,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import jp.sourceforge.reflex.util.FieldMapper;
 
-public class RequestMapper extends FieldMapper{
+public class RequestMapper extends FieldMapper {
+	
+	public RequestMapper(boolean isReflexField) {
+		super(isReflexField);
+	}
 
 	public void setValue(HttpServletRequest source, Object target) {
 
@@ -14,8 +18,10 @@ public class RequestMapper extends FieldMapper{
 
 		for (Field fld : fields) {
 
-			String setter = "set" + fld.getName().substring(0, 1).toUpperCase() + fld.getName().substring(1);
+			//String setter = "set" + fld.getName().substring(0, 1).toUpperCase() + fld.getName().substring(1);
 
+			String setter = getSetter(fld, isReflexField);
+			
 			try {
 				String propvalueStr = source.getParameter(fld.getName());
 

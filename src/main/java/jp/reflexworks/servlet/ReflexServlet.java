@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 import jp.reflexworks.servlet.util.HttpStatus;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
+import jp.sourceforge.reflex.util.DeflateUtil;
 
 import org.json.JSONException;
 
@@ -40,7 +41,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, String model_package) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		return util.getEntity(req, model_package);
 	}
 
@@ -72,7 +73,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, Map<String, String> model_package) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		return util.getEntity(req, model_package);
 	}
 		
@@ -105,7 +106,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(HttpServletRequest req, IResourceMapper rxmapper) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		return util.getEntity(req, rxmapper);
 	}
 		
@@ -137,7 +138,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(String body, String model_package, boolean useJson) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
 		return util.getEntity(body, rxmapper, useJson);
 	}
@@ -154,7 +155,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public Object getEntity(String body, Map<String, String> model_package,
 			boolean useJson) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
 		return util.getEntity(body, rxmapper, useJson);
 	}
@@ -170,7 +171,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
-	throws IOException, JSONException {
+	throws IOException, JSONException, ClassNotFoundException {
 		return util.getEntity(body, rxmapper, useJson);
 	}
 
@@ -290,7 +291,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			String model_package, int statusCode) throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, useJson, rxmapper, statusCode);
+		this.doResponse(resp, entities, useJson, rxmapper, null, statusCode);
 	}
 
 	/**
@@ -310,7 +311,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			String model_package, int statusCode, String callback) 
 	throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, useJson, rxmapper, statusCode, callback);
+		this.doResponse(resp, entities, useJson, rxmapper, null, statusCode, callback);
 	}
 
 	/**
@@ -333,7 +334,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			String callback, boolean isGZip) 
 	throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(req, resp, entities, useJson, rxmapper, statusCode, 
+		this.doResponse(req, resp, entities, useJson, rxmapper, null, statusCode, 
 				callback, isGZip);
 	}
 
@@ -392,7 +393,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			Map<String, String> model_package, int statusCode) throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, useJson, rxmapper, statusCode);
+		this.doResponse(resp, entities, useJson, rxmapper, null, statusCode);
 	}
 		
 	/**
@@ -412,7 +413,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			Map<String, String> model_package, int statusCode, String callback) 
 					throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, useJson, rxmapper, statusCode, callback);
+		this.doResponse(resp, entities, useJson, rxmapper, null, statusCode, callback);
 	}
 	
 	/**
@@ -435,7 +436,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			int statusCode, String callback, boolean isGZip) 
 					throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(req, resp, entities, useJson, rxmapper, statusCode, 
+		this.doResponse(req, resp, entities, useJson, rxmapper, null, statusCode, 
 				callback, isGZip);
 	}
 
@@ -448,11 +449,13 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param entities XMLまたはJSONにシリアライズするentity
 	 * @param useJson true:JSON形式、false:XML形式
 	 * @param rxmapper Resource Mapper
+	 * @param deflateUtil DeflateUtil
 	 */
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
-			IResourceMapper rxmapper) throws IOException {
+			IResourceMapper rxmapper, DeflateUtil deflateUtil) 
+	throws IOException {
 		int statusCode = HttpStatus.SC_OK;
-		this.doResponse(resp, entities, useJson, rxmapper, statusCode);
+		this.doResponse(resp, entities, useJson, rxmapper, deflateUtil, statusCode);
 	}
 
 	/**
@@ -468,9 +471,10 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param callback callback関数
 	 */
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
-			IResourceMapper rxmapper, String callback) throws IOException {
+			IResourceMapper rxmapper, DeflateUtil deflateUtil, String callback) 
+	throws IOException {
 		int statusCode = HttpStatus.SC_OK;
-		this.doResponse(resp, entities, useJson, rxmapper, statusCode, callback);
+		this.doResponse(resp, entities, useJson, rxmapper, deflateUtil, statusCode, callback);
 	}
 
 	/**
@@ -485,8 +489,9 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 */
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
-			IResourceMapper rxmapper, int statusCode) throws IOException {
-		this.doResponse(resp, entities, useJson, rxmapper, statusCode, null);
+			IResourceMapper rxmapper, DeflateUtil deflateUtil, int statusCode) 
+	throws IOException {
+		this.doResponse(resp, entities, useJson, rxmapper, deflateUtil, statusCode, null);
 	}
 		
 	/**
@@ -503,10 +508,11 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param callback callback関数
 	 */
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
-			IResourceMapper rxmapper, int statusCode, String callback) 
+			IResourceMapper rxmapper, DeflateUtil deflateUtil,
+			int statusCode, String callback) 
 	throws IOException {
-		doResponse(null, resp, entities, useJson, rxmapper, statusCode, callback, 
-				false);	// GZip圧縮しない
+		doResponse(null, resp, entities, useJson, rxmapper, deflateUtil, statusCode, 
+				callback, false);	// GZip圧縮しない
 	}
 
 	/**
@@ -521,15 +527,39 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param useJson true:JSON形式、false:XML形式
 	 * @param rxmapper Resource Mapper
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
+	 * @param isGZip GZIP圧縮する場合true
+	 */
+	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
+			Object entities, boolean useJson, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip) 
+	throws IOException {
+		doResponse(req, resp, entities, useJson, rxmapper, deflateUtil, 
+				statusCode, null, isGZip);
+	}
+
+	/**
+	 * レスポンス出力.
+	 * <p>
+	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
+	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
+	 * </p>
+	 * @param req HttpServletRequest
+	 * @param resp HttpServletResponse
+	 * @param entities XMLまたはJSONにシリアライズするentity
+	 * @param useJson true:JSON形式、false:XML形式
+	 * @param rxmapper Resource Mapper
+	 * @param deflateUtil DeflateUtil
+	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param callback callback関数
 	 * @param isGZip GZIP圧縮する場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, boolean useJson, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil,
 			int statusCode, String callback, boolean isGZip) 
 	throws IOException {
 		int format = ReflexServletUtil.convertFormatType(useJson);
-		doResponse(req, resp, entities, format, rxmapper, 
+		doResponse(req, resp, entities, format, rxmapper, deflateUtil, 
 				statusCode, callback, isGZip, true);	// 名前空間出力(旧バージョン)
 	}
 
@@ -544,18 +574,46 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param entities XMLまたはJSONにシリアライズするentity
 	 * @param format 1:XML, 2:JSON, 3:MessagePack
 	 * @param rxmapper Resource Mapper
+	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
 	 * @param isGZip GZIP圧縮する場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			int statusCode, String callback, boolean isGZip, boolean isStrict) 
+			DeflateUtil deflateUtil,
+			int statusCode, boolean isGZip, boolean isStrict) 
 	throws IOException {
-		doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback,
+		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, null,
 				isGZip, isStrict);
 	}
 	
+	/**
+	 * レスポンス出力.
+	 * <p>
+	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
+	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
+	 * </p>
+	 * @param req HttpServletRequest
+	 * @param resp HttpServletResponse
+	 * @param entities XMLまたはJSONにシリアライズするentity
+	 * @param format 1:XML, 2:JSON, 3:MessagePack
+	 * @param rxmapper Resource Mapper
+	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
+	 * @param contentType Content-Type
+	 * @param isGZip GZIP圧縮する場合true
+	 */
+	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
+			Object entities, int format, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil,
+			int statusCode, String contentType, boolean isGZip, 
+			boolean isStrict) 
+	throws IOException {
+		//util.doResponse(req, resp, entities, format, rxmapper, 
+		//		statusCode, contentType, isGZip, isStrict);
+		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
+				statusCode, isGZip, isStrict, contentType);
+	}
+
 	/**
 	 * レスポンス出力.
 	 * <p>
@@ -574,11 +632,15 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
+			DeflateUtil deflateUtil,
 			int statusCode, String contentType, String callback, boolean isGZip, 
 			boolean isStrict) 
 	throws IOException {
-		util.doResponse(req, resp, entities, format, rxmapper, 
-				statusCode, contentType, callback, isGZip, isStrict);
+		// callbackは廃止
+		//util.doResponse(req, resp, entities, format, rxmapper, 
+		//		statusCode, contentType, callback, isGZip, isStrict);
+		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
+				statusCode, isGZip, isStrict, contentType);
 	}
 
 	/**
@@ -594,7 +656,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doCallback(HttpServletResponse resp, Object entities, String model_package, 
 			String callback) throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, true, rxmapper, HttpStatus.SC_OK, callback);
+		this.doResponse(resp, entities, true, rxmapper, null, HttpStatus.SC_OK, callback);
 	}
 
 	/**
@@ -607,10 +669,11 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param model_package modelのパッケージ
 	 * @param callback コールバック関数名
 	 */
-	public void doCallback(HttpServletResponse resp, Object entities, Map<String, String> model_package, 
-			String callback) throws IOException {
+	public void doCallback(HttpServletResponse resp, Object entities, 
+			Map<String, String> model_package, String callback) 
+	throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, true, rxmapper, HttpStatus.SC_OK, callback);
+		this.doResponse(resp, entities, true, rxmapper, null, HttpStatus.SC_OK, callback);
 	}
 
 	/**
