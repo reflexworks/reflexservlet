@@ -183,7 +183,7 @@ public class ServletContextUtil implements ServletContextListener {
 					if (name.startsWith(prefix)) {
 						String editKey = convSystemProp(name);
 						if (!StringUtils.isBlank(editKey)) {
-							params.put(editKey, getConv(editKey));
+							params.put(editKey, getConv(name));
 						}
 					}
 				}
@@ -193,7 +193,10 @@ public class ServletContextUtil implements ServletContextListener {
 				while (enu.hasMoreElements()) {
 					String name = (String)enu.nextElement();
 					if (name.startsWith(prefix)) {
-						params.put(convSystemProp(name), getConv(name));
+						String editKey = convSystemProp(name);
+						if (!StringUtils.isBlank(editKey)) {
+							params.put(editKey, getConv(name));
+						}
 					}
 				}
 			}
