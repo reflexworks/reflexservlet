@@ -555,12 +555,11 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, boolean useJson, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil,
-			int statusCode, String callback, boolean isGZip) 
+			DeflateUtil deflateUtil, int statusCode, String callback, boolean isGZip) 
 	throws IOException {
 		int format = ReflexServletUtil.convertFormatType(useJson);
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, 
-				statusCode, callback, isGZip, true);	// 名前空間出力(旧バージョン)
+				statusCode, callback, isGZip, true, false);	// 名前空間出力(旧バージョン)
 	}
 
 	/**
@@ -577,14 +576,15 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param isGZip GZIP圧縮する場合true
+	 * @param isDisableDeflate MessagePackの場合で、Deflate圧縮しない場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil,
-			int statusCode, boolean isGZip, boolean isStrict) 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
+			boolean isDisableDeflate) 
 	throws IOException {
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, null,
-				isGZip, isStrict);
+				isGZip, isStrict, isDisableDeflate);
 	}
 	
 	/**
@@ -601,17 +601,17 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param contentType Content-Type
 	 * @param isGZip GZIP圧縮する場合true
+	 * @param isDisableDeflate MessagePackの場合で、Deflate圧縮しない場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil,
-			int statusCode, String contentType, boolean isGZip, 
-			boolean isStrict) 
+			DeflateUtil deflateUtil, int statusCode, String contentType, 
+			boolean isGZip, boolean isStrict, boolean isDisableDeflate) 
 	throws IOException {
 		//util.doResponse(req, resp, entities, format, rxmapper, 
 		//		statusCode, contentType, isGZip, isStrict);
 		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
-				statusCode, isGZip, isStrict, contentType);
+				statusCode, isGZip, isStrict, contentType, isDisableDeflate);
 	}
 
 	/**
@@ -629,18 +629,18 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param contentType Content-Type
 	 * @param callback callback関数
 	 * @param isGZip GZIP圧縮する場合true
+	 * @param isDisableDeflate MessagePackの場合で、Deflate圧縮しない場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil,
-			int statusCode, String contentType, String callback, boolean isGZip, 
-			boolean isStrict) 
+			DeflateUtil deflateUtil, int statusCode, String contentType, 
+			String callback, boolean isGZip, boolean isStrict, boolean isDisableDeflate) 
 	throws IOException {
 		// callbackは廃止
 		//util.doResponse(req, resp, entities, format, rxmapper, 
 		//		statusCode, contentType, callback, isGZip, isStrict);
 		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
-				statusCode, isGZip, isStrict, contentType);
+				statusCode, isGZip, isStrict, contentType, isDisableDeflate);
 	}
 
 	/**

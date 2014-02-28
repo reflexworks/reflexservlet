@@ -245,11 +245,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil,
-			int statusCode, boolean isGZip, boolean isStrict) 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
+			boolean isDisableDeflate) 
 	throws IOException {
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
-				isGZip, isStrict, null);
+				isGZip, isStrict, null, isDisableDeflate);
 	}
 	
 	/**
@@ -267,8 +267,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil,
-			int statusCode, boolean isGZip, boolean isStrict, String contentType) 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, 
+			boolean isStrict, String contentType, boolean isDisableDeflate) 
 	throws IOException {
 		OutputStream out = null;
 		if (isGZip && isGZip(req)) {
@@ -295,13 +295,21 @@ public class ReflexServletUtil implements ReflexServletConst {
 				//rxmapper.toMessagePack(entities, out);
 				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
 				byte[] msgData = rxmapper.toMessagePack(entities);
-				byte[] deflateData = null;
-				if (deflateUtil != null) {
-					deflateData = deflateUtil.deflate(msgData);
+				byte[] respData = null;
+				if (isDisableDeflate) {
+					// Deflateなし
+					respData = msgData;
 				} else {
-					deflateData = DeflateUtil.deflateOneTime(msgData);
+					// Deflate圧縮
+					if (deflateUtil != null) {
+						respData = deflateUtil.deflate(msgData);
+					} else {
+						respData = DeflateUtil.deflateOneTime(msgData);
+					}
+					resp.setHeader(HEADER_CONTENT_ENCODING, 
+							HEADER_CONTENT_ENCODING_DEFLATE);
 				}
-				out.write(deflateData);
+				out.write(respData);
 				
 			} finally {
 				try {
@@ -367,7 +375,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			String html, int statusCode, boolean isGZip)
 	throws IOException {
 		doResponse(req, resp, html, 0, null, null, statusCode, isGZip, 
-				false, CONTENT_TYPE_HTML_CHARSET);
+				false, CONTENT_TYPE_HTML_CHARSET, false);
 	}
 
 	/**

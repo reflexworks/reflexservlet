@@ -49,6 +49,10 @@ public interface ReflexServletConst {
 	public static final String HEADER_CONTENT_TYPE = "Content-Type";
 	/** Header : Content Length */
 	public static final String HEADER_CONTENT_LENGTH = "Content-Length";
+	/** Header : Content Encoding */
+	public static final String HEADER_CONTENT_ENCODING = "Content-Encoding";
+	/** Header value : Content-Encoding: deflate */
+	public static final String HEADER_CONTENT_ENCODING_DEFLATE = "deflate";
 	/** Response Header : X-Content-Type-Options: nosniff */
 	public static final String HEADER_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
 	/** Response Header value : X-Content-Type-Options: nosniff */
