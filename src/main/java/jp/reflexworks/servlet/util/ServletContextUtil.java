@@ -183,7 +183,7 @@ public class ServletContextUtil implements ServletContextListener {
 					if (name.startsWith(prefix)) {
 						String editKey = convSystemProp(name);
 						if (!StringUtils.isBlank(editKey)) {
-							params.put(editKey, getConv(editKey));
+							params.put(editKey, getConv(name));
 						}
 					}
 				}

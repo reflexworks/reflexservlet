@@ -522,13 +522,13 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	//		int statusCode, String callback, boolean isGZip, boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil,
-			int statusCode, boolean isGZip, boolean isStrict) 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
+			boolean isDisableDeflate) 
 	throws IOException {
 		//doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback, 
 		//		isGZip, isStrict);
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
-				isGZip, isStrict, null);
+				isGZip, isStrict, null, isDisableDeflate);
 	}
 
 	/**
@@ -554,11 +554,11 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	//		boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil,
-			int statusCode, boolean isGZip, boolean isStrict, String contentType) 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict, 
+			String contentType, boolean isDisableDeflate) 
 	throws IOException {
 		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil, 
-				statusCode, isGZip, isStrict, contentType);
+				statusCode, isGZip, isStrict, contentType, isDisableDeflate);
 	}
 
 	/**
@@ -582,13 +582,13 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil,
 			int statusCode, String contentType, String callback, boolean isGZip, 
-			boolean isStrict) 
+			boolean isStrict, boolean isDisableDeflate) 
 	throws IOException {
 		// callbackは廃止
 		//util.doResponse(req, resp, entities, format, rxmapper, 
 		//		statusCode, contentType, callback, isGZip, isStrict);
 		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
-				statusCode, isGZip, isStrict, contentType);
+				statusCode, isGZip, isStrict, contentType, isDisableDeflate);
 	}
 
 	/**

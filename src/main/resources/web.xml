@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	id="oauth-consumer" version="2.5">
+	<display-name>web.xml test</display-name>
+
+	<filter>
+		<filter-name>oauth.OAuthConsumerFilter</filter-name>
+		<filter-class>jp.reflexworks.oauth.consumer.jee.OAuthConsumerFilter</filter-class>
+		<init-param>
+			<param-name>oauthConsumerName</param-name>
+			<param-value>test</param-value>
+		</init-param>
+		<init-param>
+			<param-name>configurationPath</param-name>
+			<param-value>classpath:///oauth.consumers</param-value>
+		</init-param>
+	</filter>
+	
+	<filter-mapping>
+		<filter-name>oauth.OAuthConsumerFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+
+	<listener>
+		<listener-class>jp.reflexworks.taggingservice.wrapper.TaggingserviceEnv</listener-class>
+	</listener>
+	
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+	
+	<!-- Taggingservice -->
+	<servlet>
+		<servlet-name>Taggingservice</servlet-name>
+		<servlet-class>jp.reflexworks.taggingservice.TaggingserviceServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Taggingservice</servlet-name>
+		<url-pattern>/d</url-pattern>
+		<url-pattern>/d/*</url-pattern>
+	</servlet-mapping>
+	
+	<!-- SampleProvider (use deprecated method) -->
+	<servlet>
+		<servlet-name>SampleProvider</servlet-name>
+		<servlet-class>jp.reflexworks.test.service.SampleProvider</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>SampleProvider</servlet-name>
+		<url-pattern>/s</url-pattern>
+		<url-pattern>/s/*</url-pattern>
+	</servlet-mapping>
+	
+	<!-- SampleProvider2 -->
+	<servlet>
+		<servlet-name>SampleProvider2</servlet-name>
+		<servlet-class>jp.reflexworks.test.service.SampleProvider2</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>SampleProvider2</servlet-name>
+		<url-pattern>/s2</url-pattern>
+		<url-pattern>/s2/*</url-pattern>
+	</servlet-mapping>
+	
+	<!-- package -->
+	<context-param>
+		<param-name>package.test</param-name>
+		<param-value>jp.co.reflexworks.model</param-value>
+	</context-param>
+	<context-param>
+		<param-name>namespace.test</param-name>
+		<param-value>http://reflexworks.jp/test/1.0</param-value>
+	</context-param>
+
+	<!-- BDB格納パス -->
+	<!-- 共通データのパス -->
+	<context-param>
+		<param-name>bdb.path.common</param-name>
+		<param-value>/bdb/data/common</param-value>
+	</context-param>
+	<!-- ノードごとに定義を編集する -->
+	<context-param>
+		<param-name>bdb.path.node</param-name>
+		<param-value>/bdb/data/node1</param-value>
+	</context-param>
+	<!-- 以下の格納フォルダパターンに当てはまらない場合のデフォルト定義 　{適用パス}.{相対フォルダ名}-->
+	<context-param>
+		<param-name>bdb.defaultbdf</param-name>
+		<param-value>node.default</param-value>
+	</context-param>
+	<!-- BDBファイル最大オープン数 -->
+	<context-param>
+		<param-name>bdb.openlimit</param-name>
+		<param-value>4</param-value>
+	</context-param>
+	<!-- BDBキャッシュメモリサイズ割合(JVMの-Xmxに対する割合を%で指定) デフォルトは25-->
+	<context-param>
+		<param-name>bdb.cache.percent</param-name>
+		<param-value>25</param-value>
+	</context-param>
+
+	<!-- BDBのファイル格納フォルダ定義  bdf.{適用順序}.{適用パス}.{相対フォルダ名}.{ReadOnlyの場合"r"、書き込み可の場合"w"、{"-" + SyncPolicy、SYNCの場合"ss"、NO_SYNCの場合"sns"、WRITE_NO_SYNCの場合"swns"}}.{フォルダ数} (matches) -->
+	<!-- フォルダ数を指定する場合、グループ設定をすること -->
+	<context-param>
+		<param-name>bdf.1.node.other.w-swns</param-name>
+		<param-value>^\/$|^/_node/.*|^/_user/.*</param-value>
+	</context-param>
+	<context-param>
+		<param-name>bdf.2.common.master.r</param-name>
+		<param-value>^/_master/.*|^/_master2/.*</param-value>
+	</context-param>
+	<context-param>
+		<param-name>bdf.3.node.data.w-swns.5</param-name>
+		<param-value>^/.*</param-value> 
+	</context-param>
+
+	<!-- JEクリーナ起動設定 -->
+	<context-param>
+		<param-name>bdb.cleaner.type</param-name>
+		<param-value>1</param-value>
+	</context-param>
+	<context-param>
+		<param-name>bdb.cleaner.num</param-name>
+		<param-value>3</param-value>
+	</context-param>
+	<context-param>
+		<param-name>bdb.cleaner.delay</param-name>
+		<param-value>2 min</param-value>
+	</context-param>
+
+	<!-- 設定情報を外出しにしたプロパティファイルを指定 -->
+	<context-param>
+		<param-name>context.properties</param-name>
+		<param-value>test.properties</param-value>
+	</context-param>
+	
+	<!-- Cookieについて、SSL(https)のみ有効にする設定 -->
+	<session-config>
+		<cookie-config>
+			<secure>true</secure>
+		</cookie-config>
+	</session-config>
+
+</web-app>
