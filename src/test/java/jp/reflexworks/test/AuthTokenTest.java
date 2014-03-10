@@ -15,10 +15,11 @@ public class AuthTokenTest {
 		
 		String username = "vtec";
 		String password = "38jv7j3u";
+		String serviceName = "testservice";
 		String apiKey = "apikey9083ybhr98a3h2biop";
 		
 		// RXID作成
-		String rxid = AuthTokenUtil.createRXIDString(username, password, apiKey);
+		String rxid = AuthTokenUtil.createRXIDString(username, password, serviceName, apiKey);
 		
 		System.out.println(rxid);
 		

@@ -21,6 +21,7 @@ public class RXID {
 		//String password = "";
 		//String password = "noriko2010";
 		String apiKey = "ApiKey12345X";
+		String serviceName = "testservice";
 		
 		WsseUtil wsseUtil = new WsseUtil();
 
@@ -57,7 +58,7 @@ public class RXID {
 			// RXIDはAPIKey付きで作成する必要がある。
 			System.out.println("--- RXID with APIKey ---");
 			System.out.println("username=" + username + ", password=" + password + ", apiKey=" + apiKey);
-			String rxid3 = wsseUtil.createRXIDString(username, password, apiKey);
+			String rxid3 = wsseUtil.createRXIDString(username, password, serviceName, apiKey);
 			System.out.println("rxid=" + rxid3);
 			WsseAuth wsseauth3 = wsseUtil.parseRXID(rxid3);
 			System.out.println(wsseauth3.toString());
