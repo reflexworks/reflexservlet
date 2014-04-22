@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.util.Date;
 import java.util.Map;
 import java.util.List;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -67,7 +68,8 @@ public class WsseUtil extends AuthTokenUtil {
 		if (!StringUtils.isBlank(value)) {
 			return parseWSSEheader(value);
 		}
-		value = req.getHeader(HEADER_AUTHORIZATION);
+		//value = req.getHeader(HEADER_AUTHORIZATION);
+		value = getTokenValue(req.getHeaders(HEADER_AUTHORIZATION));
 		if (value != null) {
 			String rxid = extractRXID(value);
 			if (!StringUtils.isBlank(rxid)) {
@@ -267,8 +269,41 @@ public class WsseUtil extends AuthTokenUtil {
 		}
 		List<String> rxids = headers.get(HEADER_AUTHORIZATION);
 		if (rxids != null && rxids.size() > 0) {
-			String rxid = rxids.get(0);
+			//String rxid = rxids.get(0);
+			String rxid = getTokenValue(rxids);
 			return extractRXID(rxid);
+		}
+		return null;
+	}
+	
+	private String getTokenValue(Enumeration values) {
+		if (values != null) {
+			while (values.hasMoreElements()) {
+				String value = (String)values.nextElement();
+				String tmp = getTokenValue(value);
+				if (tmp != null) {
+					return tmp;
+				}
+			}
+		}
+		return null;
+	}
+	
+	private String getTokenValue(List<String> values) {
+		if (values != null) {
+			for (String value : values) {
+				String tmp = getTokenValue(value);
+				if (tmp != null) {
+					return tmp;
+				}
+			}
+		}
+		return null;
+	}
+	
+	private String getTokenValue(String value) {
+		if (value != null && value.startsWith(HEADER_AUTHORIZATION_TOKEN)) {
+			return value;
 		}
 		return null;
 	}
