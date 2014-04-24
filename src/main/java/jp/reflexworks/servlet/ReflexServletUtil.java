@@ -22,7 +22,6 @@ import jp.sourceforge.reflex.core.ResourceMapper;
 import jp.sourceforge.reflex.util.FileUtil;
 import jp.sourceforge.reflex.util.StringUtils;
 import jp.sourceforge.reflex.util.DeflateUtil;
-
 import jp.reflexworks.servlet.exception.InvokeException;
 import jp.reflexworks.servlet.util.HttpStatus;
 
@@ -37,6 +36,9 @@ import jp.reflexworks.servlet.util.HttpStatus;
  * </p>
  */
 public class ReflexServletUtil implements ReflexServletConst {
+
+	/** Reqest Header : X-Requested-With */
+	private static final String X_REQUESTED_WITH_LOWER = X_REQUESTED_WITH.toLowerCase();
 
 	/**
 	 * リクエストデータ取得
@@ -774,9 +776,28 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public static boolean isXMLHttpRequest(HttpServletRequest req) {
 		if (req != null) {
 			String requestedWith = req.getHeader(X_REQUESTED_WITH);
+			if (requestedWith == null) {
+				requestedWith = req.getHeader(X_REQUESTED_WITH_LOWER);
+			}
 			if (X_REQUESTED_WITH_WHR.equals(requestedWith)) {
 				return true;
 			}
+		}
+		return false;
+	}
+	
+	/**
+	 * X-Requested-Withヘッダに値が設定されているかどうかチェックする.
+	 * @param req リクエスト
+	 * @return X-Requested-Withヘッダに値が設定されている場合true
+	 */
+	public static boolean hasXRequestedWith(HttpServletRequest req) {
+		if (req != null) {
+			String requestedWith = req.getHeader(X_REQUESTED_WITH);
+			if (requestedWith == null) {
+				requestedWith = req.getHeader(X_REQUESTED_WITH_LOWER);
+			}
+			return !StringUtils.isBlank(requestedWith);
 		}
 		return false;
 	}
