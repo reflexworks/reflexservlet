@@ -10,6 +10,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Map;
+import java.util.Enumeration;
 import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletRequest;
@@ -800,6 +801,32 @@ public class ReflexServletUtil implements ReflexServletConst {
 			return !StringUtils.isBlank(requestedWith);
 		}
 		return false;
+	}
+	
+	/**
+	 * リクエストヘッダから指定されたキーの値のうち、先頭が指定された文字列と等しい値を返却します。
+	 * @param req リクエスト
+	 * @param key リクエストヘッダのキー
+	 * @param valuePrefix リクエストヘッダの値の先頭文字列
+	 * @return リクエストヘッダのうち、指定されたキー・先頭文字列に合致した値。
+	 *         複数存在する場合は最初の1件を返却します。
+	 */
+	public static String getHeaderValue(HttpServletRequest req,
+			String key, String valuePrefix) {
+		if (req == null || StringUtils.isBlank(key)) {
+			return null;
+		}
+		valuePrefix = StringUtils.null2blank(valuePrefix);
+		Enumeration<String> enu = req.getHeaders(key);
+		if (enu != null) {
+			while (enu.hasMoreElements()) {
+				String value = enu.nextElement();
+				if (value != null && value.startsWith(valuePrefix)) {
+					return value;
+				}
+			}
+		}
+		return null;
 	}
 
 }
