@@ -103,27 +103,97 @@ public class ServletContextUtil implements ServletContextListener {
 		logger.info("Web Application '" + appName + "' has been stopped.");
 	}
 	
+	/**
+	 * 指定されたキーに対する値を取得します.
+	 * <p>
+	 * プロパティファイル、web.xmlの順で参照し、値があれば返却します。
+	 * </p>
+	 * @param key キー
+	 * @return キーに対する値
+	 */
 	public String get(String key) {
 		if (key == null) {
 			return null;
 		}
-		if (properties != null) {
-			String val = properties.getProperty(key);
-			if (val != null) {
-				return val;
-			}
+		String val = getProperty(key);
+		if (val == null) {
+			val = getContext(key);
 		}
+		return val;
+	}
+	
+	/**
+	 * 指定されたキーに対する値を取得します.
+	 * <p>
+	 * プロパティファイル、web.xmlの順で参照し、値があれば返却します。<br>
+	 * 値に環境変数が指定されている場合は置換して返却します。
+	 * </p>
+	 * @param key キー
+	 * @return キーに対する値
+	 */
+	public String getConv(String key) {
+		String value = get(key);
+		return convSystemProp(value);
+	}
+
+	/**
+	 * web.xmlのinit-parameter、context-parameterの値を取得します.
+	 * @param key キー
+	 * @return web.xmlのinit-parameter、context-parameterの値
+	 */
+	public String getContext(String key) {
 		if (servletContext != null) {
 			return servletContext.getInitParameter(key);
 		}
 		return null;
 	}
 	
-	public String getConv(String key) {
-		String value = get(key);
+	/**
+	 * web.xmlのinit-parameter、context-parameterの値を取得します.
+	 * <p>
+	 * 値に環境変数が指定されている場合は置換して返却します。
+	 * </p>
+	 * @param key キー
+	 * @return web.xmlのinit-parameter、context-parameterの値
+	 */
+	public String getContextConv(String key) {
+		String value = getContext(key);
 		return convSystemProp(value);
 	}
+
+	/**
+	 * プロパティファイルの値を取得します.
+	 * @param key キー
+	 * @return 値
+	 */
+	public String getProperty(String key) {
+		if (properties != null) {
+			String val = properties.getProperty(key);
+			if (val != null) {
+				return val;
+			}
+		}
+		return null;
+	}
 	
+	/**
+	 * プロパティファイルの値を取得します.
+	 * <p>
+	 * 値に環境変数が指定されている場合は置換して返却します。
+	 * </p>
+	 * @param key キー
+	 * @return 値
+	 */
+	public String getPropertyConv(String key) {
+		String value = getProperty(key);
+		return convSystemProp(value);
+	}
+
+	/**
+	 * 指定された値に環境変数が指定されている場合は置換して返却します。
+	 * @param value 値
+	 * @return 環境変数が指定されている場合置換した値
+	 */
 	public String convSystemProp(String value) {
 		if (value != null) {
 			Matcher matcher = pattern.matcher(value);
@@ -152,7 +222,7 @@ public class ServletContextUtil implements ServletContextListener {
 	}
 	
 	/**
-	 * ServletContextから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 * ServletContextとプロパティファイルから、キーの先頭が指定されたprefixの情報をMapにして返却します。
 	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
 	 */
 	public Map<String, String> getParamsConv(String prefix) {
@@ -163,18 +233,65 @@ public class ServletContextUtil implements ServletContextListener {
 	
 	/**
 	 * ServletContextから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	public Map<String, String> getContextParamsConv(String prefix) {
+		Map<String, String> params = new HashMap<String, String>();
+		setContextMapConv(params, prefix);
+		return params;
+	}
+	
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	public Map<String, String> getPropertyParamsConv(String prefix) {
+		Map<String, String> params = new HashMap<String, String>();
+		setPropertyMapConv(params, prefix);
+		return params;
+	}
+
+	/**
+	 * ServletContextとプロパティファイルから、キーの先頭が指定されたprefixの情報をMapにして返却します。
 	 */
 	public Map<String, String> getParams(String prefix) {
 		Map<String, String> params = new HashMap<String, String>();
 		setMap(params, prefix);
 		return params;
 	}
+
+	/**
+	 * ServletContextから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 */
+	public Map<String, String> getContextParams(String prefix) {
+		Map<String, String> params = new HashMap<String, String>();
+		setContextMap(params, prefix);
+		return params;
+	}
+
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 */
+	public Map<String, String> getPropertyParams(String prefix) {
+		Map<String, String> params = new HashMap<String, String>();
+		setPropertyMap(params, prefix);
+		return params;
+	}
+
+	/**
+	 * ServletContextとプロパティファイルから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	private void setMapConv(Map<String, String> params, String prefix) {
+		setContextMapConv(params, prefix);
+		setPropertyMapConv(params, prefix);
+	}
 	
 	/**
 	 * ServletContextから、キーの先頭が指定されたprefixの情報をMapにして返却します。
 	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
 	 */
-	private void setMapConv(Map<String, String> params, String prefix) {
+	private void setContextMapConv(Map<String, String> params, String prefix) {
 		if (params != null && prefix != null && prefix.length() > 0) {
 			if (servletContext != null) {
 				Enumeration<String> enu = this.servletContext.getInitParameterNames();
@@ -188,6 +305,15 @@ public class ServletContextUtil implements ServletContextListener {
 					}
 				}
 			}
+		}
+	}
+	
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	private void setPropertyMapConv(Map<String, String> params, String prefix) {
+		if (params != null && prefix != null && prefix.length() > 0) {
 			if (properties != null) {
 				Enumeration enu = this.properties.propertyNames();
 				while (enu.hasMoreElements()) {
@@ -199,11 +325,19 @@ public class ServletContextUtil implements ServletContextListener {
 			}
 		}
 	}
-	
+
+	/**
+	 * ServletContextとプロパティファイルから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 */
+	private void setMap(Map<String, String> params, String prefix) {
+		setContextMap(params, prefix);
+		setPropertyMap(params, prefix);
+	}
+
 	/**
 	 * ServletContextから、キーの先頭が指定されたprefixの情報をMapにして返却します。
 	 */
-	private void setMap(Map<String, String> params, String prefix) {
+	private void setContextMap(Map<String, String> params, String prefix) {
 		if (params != null && prefix != null && prefix.length() > 0) {
 			if (servletContext != null) {
 				Enumeration<String> enu = this.servletContext.getInitParameterNames();
@@ -214,6 +348,14 @@ public class ServletContextUtil implements ServletContextListener {
 					}
 				}
 			}
+		}
+	}
+
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報をMapにして返却します。
+	 */
+	private void setPropertyMap(Map<String, String> params, String prefix) {
+		if (params != null && prefix != null && prefix.length() > 0) {
 			if (properties != null) {
 				Enumeration enu = this.properties.propertyNames();
 				while (enu.hasMoreElements()) {
@@ -227,7 +369,8 @@ public class ServletContextUtil implements ServletContextListener {
 	}
 
 	/**
-	 * ServletContextから、キーの先頭が指定されたprefixの情報をSortedMapにして返却します。
+	 * ServletContextとプロパティファイルから、
+	 * キーの先頭が指定されたprefixの情報をSortedMapにして返却します。
 	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
 	 */
 	public SortedMap<String, String> getSortedParamsConv(String prefix) {
@@ -235,9 +378,30 @@ public class ServletContextUtil implements ServletContextListener {
 		setMapConv(params, prefix);
 		return params;
 	}
-	
+
 	/**
 	 * ServletContextから、キーの先頭が指定されたprefixの情報をSortedMapにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	public SortedMap<String, String> getContextSortedParamsConv(String prefix) {
+		SortedMap<String, String> params = new TreeMap<String, String>();
+		setContextMapConv(params, prefix);
+		return params;
+	}
+
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報をSortedMapにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	public SortedMap<String, String> getPropertySortedParamsConv(String prefix) {
+		SortedMap<String, String> params = new TreeMap<String, String>();
+		setPropertyMapConv(params, prefix);
+		return params;
+	}
+
+	/**
+	 * ServletContextとプロパティファイルから、
+	 * キーの先頭が指定されたprefixの情報をSortedMapにして返却します。
 	 */
 	public SortedMap<String, String> getSortedParams(String prefix) {
 		SortedMap<String, String> params = new TreeMap<String, String>();
@@ -246,7 +410,26 @@ public class ServletContextUtil implements ServletContextListener {
 	}
 
 	/**
-	 * ServletContextから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 * ServletContextから、キーの先頭が指定されたprefixの情報をSortedMapにして返却します。
+	 */
+	public SortedMap<String, String> getContextSortedParams(String prefix) {
+		SortedMap<String, String> params = new TreeMap<String, String>();
+		setContextMap(params, prefix);
+		return params;
+	}
+
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報をSortedMapにして返却します。
+	 */
+	public SortedMap<String, String> getPropertySortedParams(String prefix) {
+		SortedMap<String, String> params = new TreeMap<String, String>();
+		setPropertyMap(params, prefix);
+		return params;
+	}
+
+	/**
+	 * ServletContextとプロパティファイルから、
+	 * キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
 	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
 	 */
 	public Set<String> getSetConv(String prefix) {
@@ -257,6 +440,27 @@ public class ServletContextUtil implements ServletContextListener {
 
 	/**
 	 * ServletContextから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	public Set<String> getContextSetConv(String prefix) {
+		Set<String> params = new HashSet<String>();
+		setContextSetConv(params, prefix);
+		return params;
+	}
+
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	public Set<String> getPropertySetConv(String prefix) {
+		Set<String> params = new HashSet<String>();
+		setPropertySetConv(params, prefix);
+		return params;
+	}
+
+	/**
+	 * ServletContextとプロパティファイルから、
+	 * キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
 	 */
 	public Set<String> getSet(String prefix) {
 		Set<String> params = new HashSet<String>();
@@ -266,9 +470,37 @@ public class ServletContextUtil implements ServletContextListener {
 
 	/**
 	 * ServletContextから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 */
+	public Set<String> getContextSet(String prefix) {
+		Set<String> params = new HashSet<String>();
+		setContextSet(params, prefix);
+		return params;
+	}
+
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 */
+	public Set<String> getPropertySet(String prefix) {
+		Set<String> params = new HashSet<String>();
+		setPropertySet(params, prefix);
+		return params;
+	}
+
+	/**
+	 * ServletContextとプロパティファイルから、
+	 * キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
 	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
 	 */
 	private void setSetConv(Set<String> params, String prefix) {
+		setContextSetConv(params, prefix);
+		setPropertySetConv(params, prefix);
+	}
+
+	/**
+	 * ServletContextから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	private void setContextSetConv(Set<String> params, String prefix) {
 		if (params != null && prefix != null && prefix.length() > 0) {
 			if (servletContext != null) {
 				Enumeration<String> enu = this.servletContext.getInitParameterNames();
@@ -279,6 +511,15 @@ public class ServletContextUtil implements ServletContextListener {
 					}
 				}
 			}
+		}
+	}
+
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 * 先頭に$の付いた値は、システムプロパティの値を返却します。
+	 */
+	private void setPropertySetConv(Set<String> params, String prefix) {
+		if (params != null && prefix != null && prefix.length() > 0) {
 			if (properties != null) {
 				Enumeration enu = this.properties.propertyNames();
 				while (enu.hasMoreElements()) {
@@ -295,6 +536,15 @@ public class ServletContextUtil implements ServletContextListener {
 	 * ServletContextから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
 	 */
 	private void setSet(Set<String> params, String prefix) {
+		setContextSet(params, prefix);
+		setPropertySet(params, prefix);
+	}
+
+	/**
+	 * ServletContextとプロパティファイルから、
+	 * キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 */
+	private void setContextSet(Set<String> params, String prefix) {
 		if (params != null && prefix != null && prefix.length() > 0) {
 			if (servletContext != null) {
 				Enumeration<String> enu = this.servletContext.getInitParameterNames();
@@ -305,10 +555,18 @@ public class ServletContextUtil implements ServletContextListener {
 					}
 				}
 			}
-			if (properties != null) {
-				Enumeration enu = this.properties.propertyNames();
+		}
+	}
+
+	/**
+	 * プロパティファイルから、キーの先頭が指定されたprefixの情報のparam-valueをSetにして返却します。
+	 */
+	private void setPropertySet(Set<String> params, String prefix) {
+		if (params != null && prefix != null && prefix.length() > 0) {
+			if (servletContext != null) {
+				Enumeration<String> enu = this.servletContext.getInitParameterNames();
 				while (enu.hasMoreElements()) {
-					String name = (String)enu.nextElement();
+					String name = enu.nextElement();
 					if (name.startsWith(prefix)) {
 						params.add(get(name));
 					}
