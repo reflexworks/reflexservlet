@@ -21,7 +21,7 @@ import javax.mail.internet.MimeUtility;
 import jp.sourceforge.reflex.util.StringUtils;
 
 public class MailUtil {
-	
+
 	public static final String SMTP = "smtp";
 	public static final String SMTPS = "smtps";
 
@@ -32,21 +32,21 @@ public class MailUtil {
 	static {
 		HEADERS.put("Content-Transfer-Encoding", "7bit");
 	}
-	
+
 	private static Logger logger = Logger.getLogger(MailUtil.class.getName());
 
 	public void send(String title, String message, String to, String from, 
 			String password, String host, String port, String protocol,
 			boolean isStarttls, boolean debug) 
-	throws IOException {
+					throws IOException {
 		send(title, message, to, null, from, null, password, host, port, protocol, 
 				isStarttls, debug);
 	}
-	
+
 	public void send(String title, String message, String to, String toPersonal,
 			String from, String fromPersonal, String password, String host, String port, 
 			String protocol,boolean isStarttls, boolean debug) 
-	throws IOException {
+					throws IOException {
 		Properties props = new Properties();
 		props.put("mail.smtp.host", host);
 		props.put("mail.host", host);
@@ -57,31 +57,31 @@ public class MailUtil {
 		if (debug) {
 			props.put("mail.debug", "true");
 		}
-		
+
 		send(title, message, to, toPersonal, from, fromPersonal, password, props, 
 				protocol, debug);
 	}
 
 	public void send(String title, String message, String to, String from, 
 			String password, Properties props, String protocol, boolean debug) 
-	throws IOException {
+					throws IOException {
 		send(title, message, to, null, from, null, password, props, protocol, debug);
 	}
-		
+
 	public void send(String title, String message, String to, String toPersonal,
 			String from, String fromPersonal, String password, Properties props, 
 			String protocol, boolean debug) 
-	throws IOException {
+					throws IOException {
 		Session session = Session.getInstance(props);
 		session.setDebug(debug);
 
-        Transport transport = null;
+		Transport transport = null;
 		try {
 			InternetAddress iaTo = new InternetAddress(to, toPersonal, CHARSET);
 			InternetAddress iaFrom = new InternetAddress(from, fromPersonal, CHARSET);
-			
+
 			MimeMessage msg = new MimeMessage(session);
-			
+
 			// From
 			msg.setFrom(iaFrom);
 			// To
@@ -95,7 +95,7 @@ public class MailUtil {
 			//msg.setContent(message, CONTENT_TYPE);
 			String encodeMessage = MimeUtility.encodeText(message, CHARSET, ENCODING);
 			msg.setContent(encodeMessage, CONTENT_TYPE);
-			*/
+			 */
 
 			MimeMultipart multipart = new MimeMultipart();
 			msg.setContent(multipart);
@@ -110,7 +110,7 @@ public class MailUtil {
 				// GAE
 				body.setText(message);
 			}
-			
+
 			multipart.addBodyPart(body);
 
 			// ヘッダ
@@ -122,14 +122,14 @@ public class MailUtil {
 				// protocolが設定されている場合、認証コネクト
 				transport = session.getTransport(protocol);
 				transport.connect(from, password);
-	            transport.sendMessage(msg, msg.getAllRecipients());
+				transport.sendMessage(msg, msg.getAllRecipients());
 
 			} else {
 				// protocolが設定されていない場合、そのままsendする。(GAE)
 				Transport.send(msg);
 			}
-		
-    		//logger.info("send mail.");
+
+			//logger.info("send mail.");
 
 		} catch (MessagingException e) {
 			IOException ie = new IOException();
@@ -137,16 +137,16 @@ public class MailUtil {
 			throw ie;
 
 		} finally {
-            if (transport != null) {
-            	try {
-            		transport.close();
-        		} catch (MessagingException mex) {
-        			logger.warning("MessagingException: " + mex.getMessage());
-        		}
-            }
+			if (transport != null) {
+				try {
+					transport.close();
+				} catch (MessagingException mex) {
+					logger.warning("MessagingException: " + mex.getMessage());
+				}
+			}
 		}
 	}
-	
+
 	public String convertJIS(String msg) {
 		try {
 			byte[] convBytes = msg.getBytes(CHARSET);
