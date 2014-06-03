@@ -20,14 +20,8 @@ import javax.mail.internet.MimeUtility;
 
 import jp.sourceforge.reflex.util.StringUtils;
 
-public class MailUtil {
+public class MailUtil implements MailConst {
 
-	public static final String SMTP = "smtp";
-	public static final String SMTPS = "smtps";
-
-	public static final String CHARSET = "ISO-2022-JP";
-	public static final String CONTENT_TYPE = "text/plain; charset=" + CHARSET;
-	public static final String ENCODING = "B";	// B or Q
 	public static final Map<String, String> HEADERS = new HashMap<String, String>();
 	static {
 		HEADERS.put("Content-Transfer-Encoding", "7bit");
@@ -48,14 +42,14 @@ public class MailUtil {
 			String protocol,boolean isStarttls, boolean debug) 
 					throws IOException {
 		Properties props = new Properties();
-		props.put("mail.smtp.host", host);
-		props.put("mail.host", host);
-		props.put("mail.from", from);
-		props.put("mail.smtp.port", port);  // サブミッションポート
-		props.put("mail.smtp.auth", "true");   // SMTP 認証を行う
-		props.put("mail.smtp.starttls.enable", "true");   // STARTTLS
+		props.put(PROP_SMTP_HOST, host);
+		props.put(PROP_HOST, host);
+		props.put(PROP_FROM, from);
+		props.put(PROP_SMTP_PORT, port);  // サブミッションポート
+		props.put(PROP_SMTP_AUTH, "true");   // SMTP 認証を行う
+		props.put(PROP_SMTP_STARTTLS, "true");   // STARTTLS
 		if (debug) {
-			props.put("mail.debug", "true");
+			props.put(PROP_DEBUG, "true");
 		}
 
 		send(title, message, to, toPersonal, from, fromPersonal, password, props, 
