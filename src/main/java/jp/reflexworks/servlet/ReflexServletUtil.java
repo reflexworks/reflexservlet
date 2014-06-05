@@ -249,11 +249,10 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
-			boolean isDisableDeflate) 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict) 
 	throws IOException {
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
-				isGZip, isStrict, null, isDisableDeflate);
+				isGZip, isStrict, null);
 	}
 	
 	/**
@@ -268,12 +267,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param contentType Content-Type
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
-	 * @param isDisableDeflate MessagePackをDeflate圧縮しない場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict, 
-			String contentType, boolean isDisableDeflate) 
+			String contentType) 
 	throws IOException {
 		OutputStream out = null;
 		if (isGZip && isGZip(req)) {
@@ -282,6 +280,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 		} else {
 			out = resp.getOutputStream();
 		}
+		
+		boolean isDeflate = isSetHeader(req, HEADER_ACCEPT_ENCODING, 
+				HEADER_VALUE_DEFLATE);
 
 		// ステータスコードの設定
 		resp.setStatus(statusCode);
@@ -301,10 +302,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
 				byte[] msgData = rxmapper.toMessagePack(entities);
 				byte[] respData = null;
-				if (isDisableDeflate) {
-					// Deflateなし
-					respData = msgData;
-				} else {
+				if (isDeflate) {
 					// Deflate圧縮
 					if (deflateUtil != null) {
 						respData = deflateUtil.deflate(msgData);
@@ -312,7 +310,10 @@ public class ReflexServletUtil implements ReflexServletConst {
 						respData = DeflateUtil.deflateOneTime(msgData);
 					}
 					resp.setHeader(HEADER_CONTENT_ENCODING, 
-							HEADER_CONTENT_ENCODING_DEFLATE);
+							HEADER_VALUE_DEFLATE);
+				} else {
+					// Deflateなし
+					respData = msgData;
 				}
 				out.write(respData);
 				
@@ -380,7 +381,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			String html, int statusCode, boolean isGZip)
 	throws IOException {
 		doResponse(req, resp, html, 0, null, null, statusCode, isGZip, 
-				false, CONTENT_TYPE_HTML_CHARSET, false);
+				false, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**
@@ -827,6 +828,32 @@ public class ReflexServletUtil implements ReflexServletConst {
 			}
 		}
 		return null;
+	}
+	
+	/**
+	 * リクエストヘッダのうち、指定されたキーの値に指定された値が含まれているかどうかチェックする.
+	 * @param req リクエスト
+	 * @param key キー
+	 * @param val 値
+	 * @return リクエストヘッダに指定されたキーの値がある場合true
+	 */
+	public static boolean isSetHeader(HttpServletRequest req, String key, String val) {
+		if (req == null || StringUtils.isBlank(key) || StringUtils.isBlank(val)) {
+			return false;
+		}
+		Enumeration<String> enu = req.getHeaders(key);
+		if (enu != null) {
+			while (enu.hasMoreElements()) {
+				String tmpValStr = enu.nextElement();
+				String[] tmpVals = tmpValStr.split(HEADER_VALUE_DELIMITER);
+				for (String tmpVal : tmpVals) {
+					if (val.equals(StringUtils.trim(tmpVal))) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 }

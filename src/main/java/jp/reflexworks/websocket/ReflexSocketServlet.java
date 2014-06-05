@@ -177,333 +177,6 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	/**
 	 * レスポンス出力.
 	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			String model_package) throws IOException {
-		int statusCode = HttpStatus.SC_OK;
-		//if (entities instanceof Status) {
-		//	statusCode = ((Status)entities).getCode();  // とりあえずコメントアウト
-		//}
-		this.doResponse(resp, entities, format, model_package, statusCode);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 * @param callback callback関数
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			String model_package, String callback) throws IOException {
-		int statusCode = HttpStatus.SC_OK;
-		//if (entities instanceof Status) {
-		//	statusCode = ((Status)entities).getCode();  // とりあえずコメントアウト
-		//}
-		this.doResponse(resp, entities, format, model_package, statusCode, callback);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			String model_package, int statusCode) throws IOException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, format, rxmapper, statusCode);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			String model_package, int statusCode, String callback) 
-	throws IOException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, format, rxmapper, statusCode, callback);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param req HttpServletRequest
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
-	 * @param isGZip true:GZIP圧縮対応
-	 * @param isStrict 名前空間を出力する場合true
-	 */
-	/*
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, int format, String model_package, int statusCode, 
-			String callback, boolean isGZip, boolean isStrict) 
-	throws IOException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(req, resp, entities, format, rxmapper, statusCode, 
-				callback, isGZip, isStrict);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			Map<String, String> model_package) throws IOException {
-		int statusCode = HttpStatus.SC_OK;
-		//if (entities instanceof Status) {
-		//	statusCode = ((Status)entities).getCode();  // とりあえずコメントアウト
-		//}
-		this.doResponse(resp, entities, format, model_package, statusCode);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 * @param callback callback関数
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			Map<String, String> model_package, String callback) 
-	throws IOException {
-		int statusCode = HttpStatus.SC_OK;
-		//if (entities instanceof Status) {
-		//	statusCode = ((Status)entities).getCode();  // とりあえずコメントアウト
-		//}
-		this.doResponse(resp, entities, format, model_package, statusCode, callback);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			Map<String, String> model_package, int statusCode) throws IOException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, format, rxmapper, statusCode);
-	}
-	*/
-		
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			Map<String, String> model_package, int statusCode, String callback) 
-					throws IOException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, format, rxmapper, statusCode, callback);
-	}
-	*/
-	
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param req HttpServletRequest
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param model_package modelのパッケージ
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
-	 * @param isGZip GZip圧縮対応の場合true
-	 * @param isStrict 名前空間を出力する場合true
-	 */
-	/*
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, int format, Map<String, String> model_package, 
-			int statusCode, String callback, boolean isGZip, boolean isStrict) 
-	throws IOException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(req, resp, entities, format, rxmapper, statusCode, 
-				callback, isGZip, isStrict);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param rxmapper Resource Mapper
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			IResourceMapper rxmapper) throws IOException {
-		int statusCode = HttpStatus.SC_OK;
-		//this.doResponse(resp, entities, format, rxmapper, statusCode, null);
-		this.doResponse(resp, entities, format, rxmapper, statusCode);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param rxmapper Resource Mapper
-	 * @param callback callback関数
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			IResourceMapper rxmapper, String callback, boolean isStrict) throws IOException {
-		int statusCode = HttpStatus.SC_OK;
-		this.doResponse(resp, entities, format, rxmapper, statusCode, callback);
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param rxmapper Resource Mapper
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			IResourceMapper rxmapper, int statusCode) throws IOException {
-		this.doResponse(resp, entities, format, rxmapper, statusCode, null);
-	}
-	*/
-		
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param rxmapper Resource Mapper
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			IResourceMapper rxmapper, int statusCode, String callback) 
-	throws IOException {
-		doResponse(null, resp, entities, format, rxmapper, statusCode, callback, 
-				false, true);	// GZip圧縮しない。名前空間を出力する。
-	}
-	*/
-	
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 0:XML, 1:JSON, 2:MessagePack
-	 * @param rxmapper Resource Mapper
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param callback callback関数
-	 * @param isStrict 名前空間を出力する場合true
-	 */
-	/*
-	public void doResponse(HttpServletResponse resp, Object entities, int format, 
-			IResourceMapper rxmapper, int statusCode, String callback, boolean isStrict) 
-	throws IOException {
-		doResponse(null, resp, entities, format, rxmapper, statusCode, callback, 
-				false, isStrict);	// GZip圧縮しない。
-	}
-	*/
-
-	/**
-	 * レスポンス出力.
-	 * <p>
 	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
 	 * JSON形式指定でcallback関数の設定がある場合、JSONP形式で返却します。
 	 * </p>
@@ -517,18 +190,12 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	 * @param isGZip GZIP圧縮する場合true
 	 * @param isStrict 名前空間を出力する場合true
 	 */
-	//public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-	//		Object entities, int format, IResourceMapper rxmapper, 
-	//		int statusCode, String callback, boolean isGZip, boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
-			boolean isDisableDeflate) 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict) 
 	throws IOException {
-		//doResponse(req, resp, entities, format, rxmapper, statusCode, null, callback, 
-		//		isGZip, isStrict);
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
-				isGZip, isStrict, null, isDisableDeflate);
+				isGZip, isStrict, null);
 	}
 
 	/**
@@ -548,17 +215,13 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 	 * @param isGZip GZIP圧縮する場合true
 	 * @param isStrict 名前空間を出力する場合true
 	 */
-	//public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-	//		Object entities, int format, IResourceMapper rxmapper, 
-	//		int statusCode, String contentType, boolean isGZip, 
-	//		boolean isStrict) 
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict, 
-			String contentType, boolean isDisableDeflate) 
+			String contentType) 
 	throws IOException {
 		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil, 
-				statusCode, isGZip, isStrict, contentType, isDisableDeflate);
+				statusCode, isGZip, isStrict, contentType);
 	}
 
 	/**
@@ -582,50 +245,12 @@ public abstract class ReflexSocketServlet extends WebSocketServlet implements Re
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil,
 			int statusCode, String contentType, String callback, boolean isGZip, 
-			boolean isStrict, boolean isDisableDeflate) 
+			boolean isStrict) 
 	throws IOException {
 		// callbackは廃止
-		//util.doResponse(req, resp, entities, format, rxmapper, 
-		//		statusCode, contentType, callback, isGZip, isStrict);
 		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
-				statusCode, isGZip, isStrict, contentType, isDisableDeflate);
+				statusCode, isGZip, isStrict, contentType);
 	}
-
-	/**
-	 * コールバック形式レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをJSONにシリアライズしてcallback関数を付け、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities JSONにシリアライズするentity
-	 * @param model_package modelのパッケージ
-	 * @param callback コールバック関数名
-	 */
-	/*
-	public void doCallback(HttpServletResponse resp, Object entities, String model_package, 
-			String callback) throws IOException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, FORMAT_JSON, rxmapper, HttpStatus.SC_OK, callback);
-	}
-	*/
-
-	/**
-	 * コールバック形式レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをJSONにシリアライズしてcallback関数を付け、JSONP形式で返却します。
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param entities JSONにシリアライズするentity
-	 * @param model_package modelのパッケージ
-	 * @param callback コールバック関数名
-	 */
-	/*
-	public void doCallback(HttpServletResponse resp, Object entities, Map<String, String> model_package, 
-			String callback) throws IOException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, FORMAT_JSON, rxmapper, HttpStatus.SC_OK, callback);
-	}
-	*/
 
 	/**
 	 * エラーページ出力
