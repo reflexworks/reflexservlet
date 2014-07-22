@@ -9,7 +9,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import jp.reflexworks.servlet.util.HttpStatus;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
 import jp.sourceforge.reflex.util.DeflateUtil;
@@ -195,7 +194,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			String model_package) throws IOException {
-		int statusCode = HttpStatus.SC_OK;
+		int statusCode = SC_OK;
 		//if (entities instanceof Status) {
 		//	statusCode = ((Status)entities).getCode();  // とりあえずコメントアウト
 		//}
@@ -216,7 +215,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			String model_package, String callback) throws IOException {
-		int statusCode = HttpStatus.SC_OK;
+		int statusCode = SC_OK;
 		//if (entities instanceof Status) {
 		//	statusCode = ((Status)entities).getCode();  // とりあえずコメントアウト
 		//}
@@ -296,7 +295,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			Map<String, String> model_package) throws IOException {
-		int statusCode = HttpStatus.SC_OK;
+		int statusCode = SC_OK;
 		//if (entities instanceof Status) {
 		//	statusCode = ((Status)entities).getCode();  // とりあえずコメントアウト
 		//}
@@ -318,7 +317,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			Map<String, String> model_package, String callback) 
 	throws IOException {
-		int statusCode = HttpStatus.SC_OK;
+		int statusCode = SC_OK;
 		//if (entities instanceof Status) {
 		//	statusCode = ((Status)entities).getCode();  // とりあえずコメントアウト
 		//}
@@ -400,7 +399,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			IResourceMapper rxmapper, DeflateUtil deflateUtil) 
 	throws IOException {
-		int statusCode = HttpStatus.SC_OK;
+		int statusCode = SC_OK;
 		this.doResponse(resp, entities, useJson, rxmapper, deflateUtil, statusCode);
 	}
 
@@ -419,7 +418,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			IResourceMapper rxmapper, DeflateUtil deflateUtil, String callback) 
 	throws IOException {
-		int statusCode = HttpStatus.SC_OK;
+		int statusCode = SC_OK;
 		this.doResponse(resp, entities, useJson, rxmapper, deflateUtil, statusCode, callback);
 	}
 
@@ -594,7 +593,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doCallback(HttpServletResponse resp, Object entities, String model_package, 
 			String callback) throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, true, rxmapper, null, HttpStatus.SC_OK, callback);
+		this.doResponse(resp, entities, true, rxmapper, null, SC_OK, callback);
 	}
 
 	/**
@@ -611,7 +610,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			Map<String, String> model_package, String callback) 
 	throws IOException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		this.doResponse(resp, entities, true, rxmapper, null, HttpStatus.SC_OK, callback);
+		this.doResponse(resp, entities, true, rxmapper, null, SC_OK, callback);
 	}
 
 	/**

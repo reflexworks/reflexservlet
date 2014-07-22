@@ -24,7 +24,6 @@ import jp.sourceforge.reflex.util.FileUtil;
 import jp.sourceforge.reflex.util.StringUtils;
 import jp.sourceforge.reflex.util.DeflateUtil;
 import jp.reflexworks.servlet.exception.InvokeException;
-import jp.reflexworks.servlet.util.HttpStatus;
 
 /**
  * Reflex サーブレットユーティリティ.
@@ -395,7 +394,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public void doErrorPage(HttpServletResponse resp, Throwable exception) 
 	throws IOException {
 
-		int httpStatus = HttpStatus.SC_INTERNAL_SERVER_ERROR;
+		int httpStatus = SC_INTERNAL_SERVER_ERROR;
 		if (exception instanceof InvokeException) {
 			httpStatus = ((InvokeException)exception).getHttpStatus();
 		}
