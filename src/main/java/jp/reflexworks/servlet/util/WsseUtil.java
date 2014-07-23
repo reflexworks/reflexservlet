@@ -2,7 +2,6 @@ package jp.reflexworks.servlet.util;
 
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Map;
@@ -17,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 
 import jp.sourceforge.reflex.util.DateUtil;
+import jp.sourceforge.reflex.util.SHA256;
 import jp.sourceforge.reflex.util.StringUtils;
 
 /**
@@ -237,20 +237,22 @@ public class WsseUtil extends AuthTokenUtil {
 			System.arraycopy(passwordB, 0, v, apiKeyLen + nonceB.length + createdB.length, 
 					passwordB.length);
 
-			//MessageDigest md = MessageDigest.getInstance("SHA1");
-			MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
-			md.update(v);
-
+			//MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
+			//md.update(v);
+			//
 			//digestを比較
-			byte[] mdDigestB = md.digest();
+			//byte[] mdDigestB = md.digest();
+			
+			//digestを比較
+			byte[] mdDigestB = SHA256.hash(v);
 			boolean isEqual = MessageDigest.isEqual(mdDigestB, digestB);
 			if (isEqual) {
 				auth.password = password;	// Wsseオブジェクトにpasswordを設定
 			}
 			return isEqual;
 
-		} catch (NoSuchAlgorithmException e) {
-			logger.log(Level.WARNING, e.getMessage(), e);
+		//} catch (NoSuchAlgorithmException e) {
+		//	logger.log(Level.WARNING, e.getMessage(), e);
 		} catch (UnsupportedEncodingException e) {
 			logger.log(Level.WARNING, e.getMessage(), e);
 		}
