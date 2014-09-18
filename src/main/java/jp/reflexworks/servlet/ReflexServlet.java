@@ -11,9 +11,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
+import jp.sourceforge.reflex.exception.JSONException;
 import jp.sourceforge.reflex.util.DeflateUtil;
 
-import org.json.JSONException;
 
 /**
  * Reflex サーブレット.

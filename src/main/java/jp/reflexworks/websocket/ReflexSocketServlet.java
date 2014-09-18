@@ -12,10 +12,10 @@ import jp.reflexworks.servlet.ReflexServletUtil;
 import jp.reflexworks.servlet.ReflexServletConst;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
+import jp.sourceforge.reflex.exception.JSONException;
 import jp.sourceforge.reflex.util.DeflateUtil;
 
 import org.eclipse.jetty.websocket.WebSocketServlet;
-import org.json.JSONException;
 
 @SuppressWarnings("serial")
 public abstract class ReflexSocketServlet extends WebSocketServlet implements ReflexServletConst {
