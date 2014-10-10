@@ -25,7 +25,7 @@ public class AuthTokenTest {
 		
 		// 認証チェック
 		WsseUtil wsseUtil = new WsseUtil();
-		WsseAuth wsseAuth = wsseUtil.parseRXID(rxid);
+		WsseAuth wsseAuth = AuthTokenUtil.parseRXID(rxid);
 		assertTrue(wsseUtil.checkAuth(wsseAuth, password, apiKey));
 	}
 
