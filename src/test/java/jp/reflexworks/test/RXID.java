@@ -46,8 +46,8 @@ public class RXID {
 	
 			// 旧RXIDのチェック -> 旧で無くなった
 			// APIKey対応のためcheck=falseになる。
-			String rxid2 = wsseUtil.getRXIDString(wsseauth);
-			WsseAuth wsseauth2 = wsseUtil.parseRXID(rxid2);
+			String rxid2 = WsseUtil.getRXIDString(wsseauth);
+			WsseAuth wsseauth2 = WsseUtil.parseRXID(rxid2);
 			boolean checkauth2 = wsseUtil.checkAuth(wsseauth2, password, apiKey);
 
 			System.out.println("[WsseUtil]");
@@ -93,7 +93,7 @@ public class RXID {
 		int p1 = value.indexOf("-");
 		if (p1<0) {
 			// 旧rxid
-			return new WsseUtil().parseRXID(value);
+			return WsseUtil.parseRXID(value);
 		}else {
 		
 		int p2 = p1+value.substring(p1+1).indexOf("-")+1;
