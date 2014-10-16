@@ -16,7 +16,6 @@ import java.util.zip.GZIPOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.core.ResourceMapper;
 import jp.sourceforge.reflex.exception.JSONException;
@@ -24,6 +23,7 @@ import jp.sourceforge.reflex.util.FileUtil;
 import jp.sourceforge.reflex.util.StringUtils;
 import jp.sourceforge.reflex.util.DeflateUtil;
 import jp.reflexworks.servlet.exception.InvokeException;
+import jp.reflexworks.servlet.util.HeaderUtil;
 
 /**
  * Reflex サーブレットユーティリティ.
@@ -272,6 +272,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict, 
 			String contentType) 
 	throws IOException {
+		/*
 		OutputStream out = null;
 		if (isGZip && isGZip(req)) {
 			setGZipHeader(resp);
@@ -279,6 +280,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 		} else {
 			out = resp.getOutputStream();
 		}
+		*/
+		boolean isRespGZip = isGZip && isGZip(req);
 		
 		boolean isDeflate = isSetHeader(req, HEADER_ACCEPT_ENCODING, 
 				HEADER_VALUE_DEFLATE);
@@ -296,7 +299,20 @@ public class ReflexServletUtil implements ReflexServletConst {
 			if (StringUtils.isBlank(contentType)) {
 				resp.setContentType(CONTENT_TYPE_MESSAGEPACK);
 			}
+			
+			OutputStream out = null;
 			try {
+				// Deflateの場合はGZip圧縮しない。
+				if (isDeflate) {
+					resp.setHeader(HEADER_CONTENT_ENCODING, HEADER_VALUE_DEFLATE);
+					out = resp.getOutputStream();
+				} else if (isRespGZip) {
+					setGZipHeader(resp);
+					out = new GZIPOutputStream(resp.getOutputStream());
+				} else {
+					out = resp.getOutputStream();
+				}
+				
 				//rxmapper.toMessagePack(entities, out);
 				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
 				byte[] msgData = rxmapper.toMessagePack(entities);
@@ -308,13 +324,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 					} else {
 						respData = DeflateUtil.deflateOneTime(msgData);
 					}
-					String contentEncoding = null;
-					if (isGZip) {
-						contentEncoding = HEADER_VALUE_GZIP_DEFLATE;
-					} else {
-						contentEncoding = HEADER_VALUE_DEFLATE;
-					}
-					resp.setHeader(HEADER_CONTENT_ENCODING, contentEncoding);
 				} else {
 					// Deflateなし
 					respData = msgData;
@@ -331,7 +340,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 			// レスポンスデータ出力
 			PrintWriter prtout = null;
 			try {
-				prtout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, ENCODING)));
+				OutputStream out = null;
+				if (isRespGZip) {
+					setGZipHeader(resp);
+					out = new GZIPOutputStream(resp.getOutputStream());
+				} else {
+					out = resp.getOutputStream();
+				}
+				prtout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
+						out, ENCODING)));
 				
 				if (entities instanceof String) {
 					// 文字列
@@ -404,8 +421,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 			httpStatus = ((InvokeException)exception).getHttpStatus();
 		}
 
-		if (resp.containsHeader("Content-Encoding")) {
-			resp.setHeader("Content-Encoding", null);
+		if (resp.containsHeader(HEADER_CONTENT_ENCODING)) {
+			resp.setHeader(HEADER_CONTENT_ENCODING, null);
 		}
 
 		OutputStream out = null;
@@ -625,13 +642,14 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public boolean isGZip(HttpServletRequest req) {
 		boolean ret = false;
 		if (req != null) {
-			String acceptedEncodings = req.getHeader("accept-encoding");	//クライアントの受理可能エンコーディング
+			String acceptedEncodings = req.getHeader(HEADER_ACCEPT_ENCODING);	//クライアントの受理可能エンコーディング
 			if (acceptedEncodings == null || acceptedEncodings.length() == 0) {
-				acceptedEncodings = req.getHeader("Accept-Encoding");
+				acceptedEncodings = req.getHeader(HEADER_ACCEPT_ENCODING_LOWERCASE);
 			}
-			if (acceptedEncodings != null && acceptedEncodings.indexOf("gzip") != -1) {
-				ret = true;
-			}
+			return HeaderUtil.containsHeader(acceptedEncodings, HEADER_VALUE_GZIP);
+			//if (acceptedEncodings != null && acceptedEncodings.indexOf("gzip") != -1) {
+			//	ret = true;
+			//}
 		}
 		return ret;
 	}
