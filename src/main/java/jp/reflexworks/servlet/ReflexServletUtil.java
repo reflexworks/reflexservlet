@@ -308,8 +308,13 @@ public class ReflexServletUtil implements ReflexServletConst {
 					} else {
 						respData = DeflateUtil.deflateOneTime(msgData);
 					}
-					resp.setHeader(HEADER_CONTENT_ENCODING, 
-							HEADER_VALUE_DEFLATE);
+					String contentEncoding = null;
+					if (isGZip) {
+						contentEncoding = HEADER_VALUE_GZIP_DEFLATE;
+					} else {
+						contentEncoding = HEADER_VALUE_DEFLATE;
+					}
+					resp.setHeader(HEADER_CONTENT_ENCODING, contentEncoding);
 				} else {
 					// Deflateなし
 					respData = msgData;
@@ -636,7 +641,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param resp
 	 */
 	public void setGZipHeader(HttpServletResponse resp) {
-		resp.setHeader("Content-Encoding", "gzip");
+		resp.setHeader(HEADER_CONTENT_ENCODING, HEADER_VALUE_GZIP);
 	}
 
 	/**
