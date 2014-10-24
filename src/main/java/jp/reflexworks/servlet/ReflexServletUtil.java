@@ -293,6 +293,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 			resp.setContentType(contentType);
 		}
 
+		// status=204 の場合はコンテントを返却しない。
+		if (entities == null || statusCode == HttpStatus.SC_NO_CONTENT) {
+			return;
+		}
+
 		// MessagePackの場合は、PrintWriterでなくOutputStreamを使用する。
 		if (!(entities instanceof String) && format == FORMAT_MESSAGEPACK) {
 			// MessagePack
@@ -313,10 +318,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 					out = resp.getOutputStream();
 				}
 				
-				//rxmapper.toMessagePack(entities, out);
 				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
-				byte[] msgData = rxmapper.toMessagePack(entities);
 				byte[] respData = null;
+				byte[] msgData = rxmapper.toMessagePack(entities);
 				if (isDeflate) {
 					// Deflate圧縮
 					if (deflateUtil != null) {
@@ -328,7 +332,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 					// Deflateなし
 					respData = msgData;
 				}
-				out.write(respData);
+				if (respData != null && respData.length > 0) {
+					out.write(respData);
+				}
 				
 			} finally {
 				try {
