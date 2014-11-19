@@ -41,7 +41,7 @@ public class ServletContextUtil implements ServletContextListener {
 	private Properties properties;
 	private Pattern pattern;
 	private static ServletContextUtil plugin = null;
-	private FileUtil fileUtil = new FileUtil();
+	//private FileUtil fileUtil = new FileUtil();
 
 	public void contextInitialized(ServletContextEvent sce) {
 		this.servletContext = sce.getServletContext();
@@ -78,7 +78,7 @@ public class ServletContextUtil implements ServletContextListener {
 				}
 			}
 			*/
-			InputStream in = fileUtil.getInputStreamFromFile(propertyPath);
+			InputStream in = FileUtil.getInputStreamFromFile(propertyPath);
 			
 			if (in != null) {
 				try {
