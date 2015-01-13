@@ -223,8 +223,9 @@ public class WsseUtil extends AuthTokenUtil {
 		if (resp == null || StringUtils.isBlank(rxid)) {
 			return;
 		}
-		String headerValue = editRXIDHeader(rxid);
-		resp.addHeader(HEADER_AUTHORIZATION, headerValue);
+		//String headerValue = editRXIDHeader(rxid);
+		//resp.addHeader(HEADER_AUTHORIZATION, headerValue);
+		resp.addHeader(HEADER_X_RXID, rxid);
 	}
 
 	/**
