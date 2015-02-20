@@ -207,7 +207,10 @@ public class ServletContextUtil implements ServletContextListener {
 				//	throw new IllegalArgumentException("System Property ${" + group1 + "} is required.");
 				//}
 				if (!StringUtils.isBlank(propValue)) {
-					ret = ret.replaceAll(REGEX_SYSTEM_PARAM_START + group1 + REGEX_SYSTEM_PARAM_END, 
+					//ret = ret.replaceAll(REGEX_SYSTEM_PARAM_START + group1 + REGEX_SYSTEM_PARAM_END, 
+					//		propValue);
+					ret = StringUtils.replaceAll(ret, 
+							REGEX_SYSTEM_PARAM_START + group1 + REGEX_SYSTEM_PARAM_END, 
 							propValue);
 				} else {
 					logger.info("System Property ${" + group1 + "} is required.");
