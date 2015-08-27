@@ -1,5 +1,7 @@
 package jp.reflexworks.servlet.util;
 
+import java.util.Locale;
+
 import javax.servlet.http.Part;
 
 import jp.reflexworks.servlet.ReflexServletConst;
@@ -10,7 +12,7 @@ import jp.reflexworks.servlet.ReflexServletConst;
 public class MultipartUtil implements ReflexServletConst {
 
 	public static final String HEADER_CONTENT_DISPOSITION_LOWER = 
-			HEADER_CONTENT_DISPOSITION.toLowerCase();
+			HEADER_CONTENT_DISPOSITION.toLowerCase(Locale.ENGLISH);
 
 	/**
 	 * Content-Dispositionからファイル名を取得します.
