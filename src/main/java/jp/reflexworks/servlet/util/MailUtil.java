@@ -16,7 +16,6 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeUtility;
 
 import jp.sourceforge.reflex.util.StringUtils;
 
@@ -30,17 +29,17 @@ public class MailUtil implements MailConst {
 	private static Logger logger = Logger.getLogger(MailUtil.class.getName());
 
 	public void send(String title, String message, String to, String from, 
-			String password, String host, String port, String protocol,
+			String user, String password, String host, String port, String protocol,
 			boolean isStarttls, boolean debug) 
-					throws IOException {
-		send(title, message, to, null, from, null, password, host, port, protocol, 
+	throws IOException {
+		send(title, message, to, null, from, null, user, password, host, port, protocol, 
 				isStarttls, debug);
 	}
 
 	public void send(String title, String message, String to, String toPersonal,
-			String from, String fromPersonal, String password, String host, String port, 
-			String protocol,boolean isStarttls, boolean debug) 
-					throws IOException {
+			String from, String fromPersonal, String user, String password, 
+			String host, String port, String protocol, boolean isStarttls, boolean debug) 
+	throws IOException {
 		Properties props = new Properties();
 		props.put(PROP_SMTP_HOST, host);
 		props.put(PROP_HOST, host);
@@ -52,20 +51,20 @@ public class MailUtil implements MailConst {
 			props.put(PROP_DEBUG, "true");
 		}
 
-		send(title, message, to, toPersonal, from, fromPersonal, password, props, 
+		send(title, message, to, toPersonal, from, fromPersonal, user, password, props, 
 				protocol, debug);
 	}
 
-	public void send(String title, String message, String to, String from, 
+	public void send(String title, String message, String to, String from, String user, 
 			String password, Properties props, String protocol, boolean debug) 
 					throws IOException {
-		send(title, message, to, null, from, null, password, props, protocol, debug);
+		send(title, message, to, null, from, null, user, password, props, protocol, debug);
 	}
 
 	public void send(String title, String message, String to, String toPersonal,
-			String from, String fromPersonal, String password, Properties props, 
+			String from, String fromPersonal, String user, String password, Properties props, 
 			String protocol, boolean debug) 
-					throws IOException {
+	throws IOException {
 		Session session = Session.getInstance(props);
 		session.setDebug(debug);
 
@@ -115,7 +114,10 @@ public class MailUtil implements MailConst {
 			if (!StringUtils.isBlank(protocol)) {
 				// protocolが設定されている場合、認証コネクト
 				transport = session.getTransport(protocol);
-				transport.connect(from, password);
+				if (StringUtils.isBlank(user)) {
+					user = from;
+				}
+				transport.connect(user, password);
 				transport.sendMessage(msg, msg.getAllRecipients());
 
 			} else {

@@ -4,6 +4,7 @@ public interface MailConst {
 
 	public static final String PROP_FROM = "mail.from";
 	public static final String PROP_FROM_PERSONAL = "mail.from.personal";
+	public static final String PROP_USER = "mail.user";
 	public static final String PROP_PASSWORD = "mail.password";
 	public static final String PROP_HOST = "mail.host";
 	public static final String PROP_SMTP_HOST = "mail.smtp.host";
