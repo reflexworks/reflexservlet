@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Enumeration;
 import java.util.zip.GZIPOutputStream;
@@ -38,7 +39,8 @@ import jp.reflexworks.servlet.util.HeaderUtil;
 public class ReflexServletUtil implements ReflexServletConst {
 
 	/** Reqest Header : X-Requested-With */
-	private static final String X_REQUESTED_WITH_LOWER = X_REQUESTED_WITH.toLowerCase();
+	private static final String X_REQUESTED_WITH_LOWER = 
+			X_REQUESTED_WITH.toLowerCase(Locale.ENGLISH);
 
 	/**
 	 * リクエストデータ取得
@@ -139,7 +141,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		if (body != null) {
 			int equalIdx = body.indexOf("=");
 			if (equalIdx > 0 && equalIdx < body.length()) {
-				String item = body.substring(0, equalIdx).toLowerCase();
+				String item = body.substring(0, equalIdx).toLowerCase(Locale.ENGLISH);
 				if (JSON.equals(item) && useJson) {
 					result = rxmapper.fromJSON(body.substring(equalIdx + 1));
 					changeObj = true;
@@ -573,7 +575,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		try {
 			String contentType = null;
 			// Content-Typeの設定
-			String type = reqFileTemp.substring(reqFileTemp.indexOf(".") + 1).toLowerCase();
+			String type = reqFileTemp.substring(reqFileTemp.indexOf(".") + 1).toLowerCase(Locale.ENGLISH);
 			if ("html".equals(type) || "htm".equals(type)) {
 				contentType = "text/html;charset=" + ENCODING;
 			} else if ("xml".equals(type)) {
@@ -708,7 +710,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		if (suffixIdx > 0) {
 			int slashIdx = uri.lastIndexOf("/");
 			if (suffixIdx > slashIdx) {
-				suffix = uri.substring(suffixIdx + 1).toLowerCase();
+				suffix = uri.substring(suffixIdx + 1).toLowerCase(Locale.ENGLISH);
 			}
 		}
 		return suffix;

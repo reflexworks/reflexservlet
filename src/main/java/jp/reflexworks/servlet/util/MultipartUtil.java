@@ -1,16 +1,18 @@
 package jp.reflexworks.servlet.util;
 
+import java.util.Locale;
+
 import javax.servlet.http.Part;
+
+import jp.reflexworks.servlet.ReflexServletConst;
 
 /**
  * Servlet 3.0のファイルアップロード機能をサポートするユーティリティです.
  */
-public class MultipartUtil {
-	
-	public static final String CONTENT_DISPOSITION = "Content-Disposition";
-	public static final String CONTENT_DISPOSITION_LOWER = CONTENT_DISPOSITION.toLowerCase();
-	public static final String DISPOSITION_SPLIT = ";";
-	public static final String FILENAME = "filename";
+public class MultipartUtil implements ReflexServletConst {
+
+	public static final String HEADER_CONTENT_DISPOSITION_LOWER = 
+			HEADER_CONTENT_DISPOSITION.toLowerCase(Locale.ENGLISH);
 
 	/**
 	 * Content-Dispositionからファイル名を取得します.
@@ -20,21 +22,21 @@ public class MultipartUtil {
 	 * @param part Part
 	 * @return アップロードファイル名
 	 */
-	public String getFilename(Part part) {
+	public static String getFilename(Part part) {
 		if (part != null) {
-			String contentDisposition = part.getHeader(CONTENT_DISPOSITION);
+			String contentDisposition = part.getHeader(HEADER_CONTENT_DISPOSITION);
 			if (contentDisposition == null) {
-				contentDisposition = part.getHeader(CONTENT_DISPOSITION_LOWER);
+				contentDisposition = part.getHeader(HEADER_CONTENT_DISPOSITION_LOWER);
 			}
 			if (contentDisposition != null) {
-		        for (String cd : contentDisposition.split(DISPOSITION_SPLIT)) {
-		            if (cd != null && cd.trim().startsWith(FILENAME)) {
-		                return cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
-		            }
-		        }
+				for (String cd : contentDisposition.split(HEADER_DISPOSITION_SPLIT)) {
+					if (cd != null && cd.trim().startsWith(HEADER_VALUE_FILENAME)) {
+						return cd.substring(cd.indexOf('=') + 1).trim().replace("\"", "");
+					}
+				}
 			}
 		}
-        return null;
-    }
+		return null;
+	}
 
 }
