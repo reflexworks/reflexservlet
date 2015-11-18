@@ -88,7 +88,9 @@ public class WsseUtil extends AuthTokenUtil {
 		String rxid = req.getParameter(RXID);
 		if (rxid != null) {
 			auth = parseRXID(rxid);
-			auth.isQueryString = true;
+			if (auth != null) {
+				auth.isQueryString = true;
+			}
 		}
 		return auth;
 	}
