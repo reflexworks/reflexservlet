@@ -221,7 +221,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return Bufferから読み込んだ文字列
 	 */
 	public String getBody(BufferedReader b) throws IOException {
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		String str;
 		boolean isFirst = true;
 		while ((str = b.readLine()) != null) {
@@ -686,7 +686,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return 編集した文字列
 	 */
 	public static String errorString(Throwable exception, String s) {
-		StringBuffer eStr = new StringBuffer();
+		StringBuilder eStr = new StringBuilder();
 		StackTraceElement[] stackTraceElement = exception.getStackTrace();
 		if (stackTraceElement != null && stackTraceElement.length > 0) {
 			eStr.append(stackTraceElement[0].toString());

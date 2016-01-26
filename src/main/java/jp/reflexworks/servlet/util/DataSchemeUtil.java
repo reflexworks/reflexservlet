@@ -25,15 +25,15 @@ public class DataSchemeUtil {
 
 		byte[] base64data = Base64.encodeBase64(data);
 		
-		StringBuffer buf = new StringBuffer();
-		buf.append(PREFIX_1);
+		StringBuilder sb = new StringBuilder();
+		sb.append(PREFIX_1);
 		if (mediatype != null && mediatype.length() > 0) {
-			buf.append(mediatype);
+			sb.append(mediatype);
 		} else {
-			buf.append(MEDIATYPE_DEFAULT);
+			sb.append(MEDIATYPE_DEFAULT);
 		}
-		buf.append(PREFIX_2);
-		out.write(buf.toString().getBytes(CHARSET));
+		sb.append(PREFIX_2);
+		out.write(sb.toString().getBytes(CHARSET));
 		out.write(base64data);
 	}
 
