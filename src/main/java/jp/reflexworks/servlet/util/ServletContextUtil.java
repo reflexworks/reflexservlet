@@ -39,7 +39,7 @@ public class ServletContextUtil implements ServletContextListener {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private ServletContext servletContext;
 	private Properties properties;
-	private Pattern pattern;
+	private Pattern pattern = Pattern.compile(REGEX_SYSTEM_PARAM);
 	private static ServletContextUtil plugin = null;
 	//private FileUtil fileUtil = new FileUtil();
 
@@ -52,32 +52,13 @@ public class ServletContextUtil implements ServletContextListener {
 	}
 	
 	protected void init() {
-		this.pattern = Pattern.compile(REGEX_SYSTEM_PARAM);
+		//this.pattern = Pattern.compile(REGEX_SYSTEM_PARAM);
 		String propertyPath = getConv(PARAM_PROPERTY);
+		init(propertyPath);
+	}
+	
+	protected void init(String propertyPath) {
 		if (propertyPath != null && propertyPath.length() > 0) {
-			/*
-			InputStream in = null;
-			File propertyFile = new File(propertyPath);
-			if (propertyFile.exists()) {
-				try {
-					in = new FileInputStream(propertyFile);
-				} catch (IOException e) {
-					logger.warning(e.getMessage());
-				}
-			}
-			
-			if (in == null) {
-				ClassLoader loader = this.getClass().getClassLoader();
-				URL propertyURL = loader.getResource(propertyPath);
-				if (propertyURL != null) {
-					try {
-						in = propertyURL.openStream();
-					} catch (IOException e) {
-						logger.warning(e.getMessage());
-					}
-				}
-			}
-			*/
 			InputStream in = FileUtil.getInputStreamFromFile(propertyPath);
 			
 			if (in != null) {
@@ -90,7 +71,6 @@ public class ServletContextUtil implements ServletContextListener {
 				}
 			}
 		}
-
 	}
 
 	public void contextDestroyed(ServletContextEvent sce) {
@@ -566,10 +546,10 @@ public class ServletContextUtil implements ServletContextListener {
 	 */
 	private void setPropertySet(Set<String> params, String prefix) {
 		if (params != null && prefix != null && prefix.length() > 0) {
-			if (servletContext != null) {
-				Enumeration<String> enu = this.servletContext.getInitParameterNames();
+			if (properties != null) {
+				Enumeration enu = this.properties.propertyNames();
 				while (enu.hasMoreElements()) {
-					String name = enu.nextElement();
+					String name = (String)enu.nextElement();
 					if (name.startsWith(prefix)) {
 						params.add(get(name));
 					}
