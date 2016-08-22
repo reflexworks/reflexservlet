@@ -86,6 +86,10 @@ public class WsseUtil extends AuthTokenUtil {
 	public WsseAuth parseWSSEparam(HttpServletRequest req) {
 		WsseAuth auth = null;
 		String rxid = req.getParameter(RXID);
+		if (rxid == null) {
+			// 旧フォーマットも受け付ける。
+			rxid = req.getParameter(RXID_LEGACY);
+		}
 		if (rxid != null) {
 			auth = parseRXID(rxid);
 			if (auth != null) {
@@ -225,8 +229,6 @@ public class WsseUtil extends AuthTokenUtil {
 		if (resp == null || StringUtils.isBlank(rxid)) {
 			return;
 		}
-		//String headerValue = editRXIDHeader(rxid);
-		//resp.addHeader(HEADER_AUTHORIZATION, headerValue);
 		resp.addHeader(HEADER_X_RXID, rxid);
 	}
 
