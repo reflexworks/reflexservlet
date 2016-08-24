@@ -66,6 +66,12 @@ public class WsseUtil extends AuthTokenUtil {
 	 */
 	public WsseAuth getWsseAuthFromHeader(HttpServletRequest req) {
 		String value = req.getHeader(WSSE);
+		if (StringUtils.isBlank(value)) {
+			value = req.getHeader(WSSE_UPPER_LOWER);
+		}
+		if (StringUtils.isBlank(value)) {
+			value = req.getHeader(WSSE_LOWER);
+		}
 		if (!StringUtils.isBlank(value)) {
 			return parseWSSEheader(value);
 		}
