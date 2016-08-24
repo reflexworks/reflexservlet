@@ -10,6 +10,7 @@ import java.util.Enumeration;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -193,7 +194,9 @@ public class ServletContextUtil implements ServletContextListener {
 							REGEX_SYSTEM_PARAM_START + group1 + REGEX_SYSTEM_PARAM_END, 
 							propValue);
 				} else {
-					logger.info("System Property ${" + group1 + "} is required.");
+					if (logger.isLoggable(Level.INFO)) {
+						logger.info("System Property ${" + group1 + "} is required.");
+					}
 					ret = null;
 				}
 			}

@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.codec.binary.Base64;
 
 import jp.sourceforge.reflex.util.DateUtil;
+import jp.sourceforge.reflex.util.SHA1;
 import jp.sourceforge.reflex.util.SHA256;
 import jp.sourceforge.reflex.util.StringUtils;
 
@@ -100,13 +101,27 @@ public class WsseUtil extends AuthTokenUtil {
 	}
 
 	/**
-	 * WSSE認証チェック
+	 * WSSE認証チェック.
+	 * ハッシュ関数はSHA-256を使用します。
 	 * @param auth WSSE認証情報
 	 * @param password パスワード
 	 * @param apiKey APIKey
 	 * @return WSSE認証OKの場合true、エラーの場合false
 	 */
 	public boolean checkAuth(WsseAuth auth, String password, String apiKey) {
+		return checkAuth(auth, password, apiKey, false);
+	}
+
+	/**
+	 * WSSE認証チェック
+	 * @param auth WSSE認証情報
+	 * @param password パスワード
+	 * @param apiKey APIKey
+	 * @param isSha1 ハッシュ関数にSHA-1を使用する場合true
+	 * @return WSSE認証OKの場合true、エラーの場合false
+	 */
+	public boolean checkAuth(WsseAuth auth, String password, String apiKey,
+			boolean isSha1) {
 		if (auth == null) {
 			return false;
 		}
@@ -151,7 +166,12 @@ public class WsseUtil extends AuthTokenUtil {
 			//byte[] mdDigestB = md.digest();
 			
 			//digestを比較
-			byte[] mdDigestB = SHA256.hash(v);
+			byte[] mdDigestB = null;
+			if (isSha1) {
+				mdDigestB = SHA1.hash(v);
+			} else {
+				mdDigestB = SHA256.hash(v);
+			}
 			boolean isEqual = MessageDigest.isEqual(mdDigestB, digestB);
 			if (isEqual) {
 				auth.password = password;	// Wsseオブジェクトにpasswordを設定
