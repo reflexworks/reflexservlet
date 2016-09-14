@@ -11,6 +11,8 @@ import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Enumeration;
 import java.util.zip.GZIPOutputStream;
 
@@ -41,6 +43,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	/** Reqest Header : X-Requested-With */
 	private static final String X_REQUESTED_WITH_LOWER = 
 			X_REQUESTED_WITH.toLowerCase(Locale.ENGLISH);
+
+	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
 
 	/**
 	 * リクエストデータ取得
@@ -341,7 +345,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 			} finally {
 				try {
 					out.close();
-				} catch (IOException e) {}	// Do nothing.
+				} catch (IOException e) {
+					logger.log(Level.WARNING, e.getClass().getName(), e);
+				}
 			}
 			
 		} else {
@@ -392,7 +398,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 				if (prtout != null) {
 					try {
 						prtout.close();
-					} catch (Exception e) {}	// Do nothing.
+					} catch (Exception e) {
+						logger.log(Level.WARNING, e.getClass().getName(), e);
+					}
 				}
 			}
 		}
@@ -601,7 +609,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 		} finally {
 			try {
 				in.close();
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				logger.log(Level.WARNING, e.getClass().getName(), e);
+			}
 		}
 	}
 
@@ -638,7 +648,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 		} finally {
 			try {
 				out.close();
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				logger.log(Level.WARNING, e.getClass().getName(), e);
+			}
 		}
 	}
 

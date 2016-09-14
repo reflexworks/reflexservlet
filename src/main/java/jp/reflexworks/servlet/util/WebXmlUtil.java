@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jp.reflexworks.servlet.model.webxml.Web__app;
@@ -25,13 +26,15 @@ public class WebXmlUtil {
 			webxml = (Web__app)mapper.fromXML(reader);
 			
 		} catch (IOException e) {
-			logger.warning(e.getMessage());
+			logger.log(Level.WARNING, e.getClass().getName(), e);
 
 		} finally {
 			if (reader != null) {
 				try {
 					reader.close();
-				} catch (IOException e) {}	// Do nothing.
+				} catch (IOException e) {
+					logger.log(Level.WARNING, e.getClass().getName(), e);
+				}
 			}
 		}
 		

@@ -68,7 +68,7 @@ public class ServletContextUtil implements ServletContextListener {
 					this.properties.load(in);
 					
 				} catch (IOException e) {
-					logger.warning(e.getMessage());
+					logger.log(Level.WARNING, e.getClass().getName(), e);
 				}
 			}
 		}
