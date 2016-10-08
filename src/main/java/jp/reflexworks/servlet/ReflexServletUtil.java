@@ -43,6 +43,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 	/** Reqest Header : X-Requested-With */
 	private static final String X_REQUESTED_WITH_LOWER = 
 			X_REQUESTED_WITH.toLowerCase(Locale.ENGLISH);
+	/** Response header value : Cache-Control value */
+	private static final String CACHE_CONTROL_VALUE = NO_CACHE + ", " + NO_STORE
+			+ ", " + MUST_REVALIDATE;
 
 	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
 
@@ -251,13 +254,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 * @param isDisableDeflate MessagePackをDeflate圧縮しない場合true
+	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict) 
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
+			boolean isNoCache) 
 	throws IOException {
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
-				isGZip, isStrict, null);
+				isGZip, isStrict, isNoCache, null);
 	}
 	
 	/**
@@ -269,24 +274,16 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param rxmapper ResourceMapper
 	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param contentType Content-Type
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
+	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
+	 * @param contentType Content-Type
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict, 
-			String contentType) 
+			boolean isNoCache, String contentType) 
 	throws IOException {
-		/*
-		OutputStream out = null;
-		if (isGZip && isGZip(req)) {
-			setGZipHeader(resp);
-			out = new GZIPOutputStream(resp.getOutputStream());
-		} else {
-			out = resp.getOutputStream();
-		}
-		*/
 		boolean isRespGZip = isGZip && isGZip(req);
 		
 		boolean isDeflate = isSetHeader(req, HEADER_ACCEPT_ENCODING, 
@@ -297,6 +294,13 @@ public class ReflexServletUtil implements ReflexServletConst {
 		// Content-Typeが指定されている場合は設定
 		if (!StringUtils.isBlank(contentType)) {
 			resp.setContentType(contentType);
+		}
+		
+		// ブラウザにキャッシュしない場合
+		if (isNoCache) {
+			resp.addHeader(PRAGMA, NO_CACHE);
+			resp.addHeader(CACHE_CONTROL, CACHE_CONTROL_VALUE);
+			resp.addHeader(EXPIRES, PAST_DATE);
 		}
 
 		// status=204 の場合はコンテントを返却しない。
@@ -413,12 +417,13 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param html HTML
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param isGZip GZIP形式にする場合true
+	 * @param isNoCache ブラウザにキャッシュしない場合true
 	 */
 	public void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
-			String html, int statusCode, boolean isGZip)
+			String html, int statusCode, boolean isGZip, boolean isNoCache)
 	throws IOException {
 		doResponse(req, resp, html, 0, null, null, statusCode, isGZip, 
-				false, CONTENT_TYPE_HTML_CHARSET);
+				false, isNoCache, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**
