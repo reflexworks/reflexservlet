@@ -126,7 +126,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				reader.close();
 			} catch (Exception re) {
-				// 何もしない
+				logger.log(Level.WARNING, re.getClass().getName(), re);
 			}
 		}
 
@@ -215,7 +215,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				reader.close();
 			} catch (Exception re) {
-				// 何もしない
+				logger.log(Level.WARNING, re.getClass().getName(), re);
 			}
 		}
 

@@ -1,13 +1,17 @@
 package jp.reflexworks.servlet.util;
 
 import java.lang.reflect.Field;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
 import jp.sourceforge.reflex.util.FieldMapper;
 
 public class RequestMapper extends FieldMapper {
-	
+
+	private static Logger logger = Logger.getLogger(RequestMapper.class.getName());
+
 	public RequestMapper(boolean isReflexField) {
 		super(isReflexField);
 	}
@@ -54,9 +58,13 @@ public class RequestMapper extends FieldMapper {
 				}
 
 			} catch (NumberFormatException e) {
-				// Do Nothing
+				if (logger.isLoggable(Level.FINE)) {
+					logger.log(Level.FINE, "NumberFormatException", e);
+				}
 			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
+				if (logger.isLoggable(Level.INFO)) {
+					logger.log(Level.INFO, "IllegalArgumentException", e);
+				}
 			}
 
 		}
