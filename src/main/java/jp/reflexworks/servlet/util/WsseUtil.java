@@ -10,6 +10,7 @@ import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -54,6 +55,10 @@ public class WsseUtil extends AuthTokenUtil {
 		if (auth == null) {
 			// URLパラメータから認証情報を取得
 			auth = parseWSSEparam(req);
+		}
+		if (auth == null) {
+			// Cookieから認証情報を取得
+			auth = parseWSSEcookie(req);
 		}
 		
 		return auth;
@@ -104,6 +109,42 @@ public class WsseUtil extends AuthTokenUtil {
 			}
 		}
 		return auth;
+	}
+
+	/**
+	 * CookieからWSSE認証情報を取り出します
+	 * @param req リクエスト
+	 * @return WSSE認証情報
+	 */
+	public WsseAuth parseWSSEcookie(HttpServletRequest req) {
+		WsseAuth auth = null;
+		Cookie cookie = null;
+		
+		// RXID
+		if (auth == null) {
+			cookie = getCookie(req, RXID_LEGACY);
+			if (cookie != null) {
+				String value = cookie.getValue();
+				auth = parseRXID(value);
+			}
+		}
+		
+		return auth;
+	}
+		
+	private Cookie getCookie(HttpServletRequest req, String key) {
+		if (key == null) {
+			return null;
+		}
+		Cookie[] cookies = req.getCookies();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (key.equals(cookie.getName())) {
+					return cookie;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**
