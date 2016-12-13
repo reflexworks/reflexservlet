@@ -126,6 +126,9 @@ public class WsseUtil extends AuthTokenUtil {
 			if (cookie != null) {
 				String value = cookie.getValue();
 				auth = parseRXID(value);
+				if (auth != null) {
+					auth.isCookie = true;
+				}
 			}
 		}
 		
