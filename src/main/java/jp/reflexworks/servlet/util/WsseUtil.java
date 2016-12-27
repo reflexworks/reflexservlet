@@ -78,13 +78,22 @@ public class WsseUtil extends AuthTokenUtil {
 			value = req.getHeader(WSSE_LOWER);
 		}
 		if (!StringUtils.isBlank(value)) {
-			return parseWSSEheader(value);
+			WsseAuth auth = parseWSSEheader(value);
+			// 空の場合はブランクオブジェクトを作成して返却する。
+			if (auth == null) {
+				auth = createBlankWsseAuth(false);
+			}
+			return auth;
 		}
 		value = getRXIDValue(req.getHeaders(HEADER_AUTHORIZATION));
 		if (value != null) {
 			String rxid = extractRXID(value);
 			if (!StringUtils.isBlank(rxid)) {
-				return parseRXID(rxid);
+				WsseAuth auth = parseRXID(rxid);
+				if (auth == null) {
+					auth = createBlankWsseAuth(true);
+				}
+				return auth;
 			}
 		}
 		return null;
@@ -104,9 +113,11 @@ public class WsseUtil extends AuthTokenUtil {
 		}
 		if (rxid != null) {
 			auth = parseRXID(rxid);
-			if (auth != null) {
-				auth.isQueryString = true;
+			if (auth == null) {
+				// 空の場合はブランクオブジェクトを作成して返却する。
+				auth = createBlankWsseAuth(true);
 			}
+			auth.isQueryString = true;
 		}
 		return auth;
 	}
@@ -126,9 +137,11 @@ public class WsseUtil extends AuthTokenUtil {
 			if (cookie != null) {
 				String value = cookie.getValue();
 				auth = parseRXID(value);
-				if (auth != null) {
-					auth.isCookie = true;
+				if (auth == null) {
+					// 空の場合はブランクオブジェクトを作成して返却する。
+					auth = createBlankWsseAuth(true);
 				}
+				auth.isCookie = true;
 			}
 		}
 		
@@ -400,6 +413,17 @@ public class WsseUtil extends AuthTokenUtil {
 			logger.info("ParseException : " + e.getMessage());
 		}
 		return false;
+	}
+	
+	/**
+	 * WSSEおよびRXIDがパースできなかった場合に使用。
+	 * @param isRxid RXIDの場合true
+	 * @return 空のWSSE情報
+	 */
+	private WsseAuth createBlankWsseAuth(boolean isRxid) {
+		WsseAuth auth = new WsseAuth(null, null, null, null);
+		auth.isRxid = isRxid;
+		return auth;
 	}
 
 }
