@@ -20,6 +20,7 @@ import jp.sourceforge.reflex.util.DateUtil;
 import jp.sourceforge.reflex.util.SHA1;
 import jp.sourceforge.reflex.util.SHA256;
 import jp.sourceforge.reflex.util.StringUtils;
+import jp.sourceforge.reflex.util.URLDecoderPlus;
 
 /**
  * WSSE情報の取得、編集を行うクラス
@@ -106,10 +107,10 @@ public class WsseUtil extends AuthTokenUtil {
 	 */
 	public WsseAuth parseWSSEparam(HttpServletRequest req) {
 		WsseAuth auth = null;
-		String rxid = req.getParameter(RXID);
+		String rxid = URLDecoderPlus.urlDecode(req.getParameter(RXID));
 		if (rxid == null) {
 			// 旧フォーマットも受け付ける。
-			rxid = req.getParameter(RXID_LEGACY);
+			rxid = URLDecoderPlus.urlDecode(req.getParameter(RXID_LEGACY));
 		}
 		if (rxid != null) {
 			auth = parseRXID(rxid);
