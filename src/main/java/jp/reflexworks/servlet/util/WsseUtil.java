@@ -261,7 +261,7 @@ public class WsseUtil extends AuthTokenUtil {
 			return null;
 		}
 		List<String> rxids = headers.get(HEADER_AUTHORIZATION);
-		if (rxids != null && rxids.size() > 0) {
+		if (rxids != null && !rxids.isEmpty()) {
 			//String rxid = rxids.get(0);
 			String rxid = getRXIDValue(rxids);
 			return extractRXID(rxid);

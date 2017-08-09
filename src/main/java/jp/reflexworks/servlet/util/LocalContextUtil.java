@@ -33,7 +33,7 @@ public class LocalContextUtil extends ServletContextUtil {
 			reader = new FileReader(webxml);
 			Web__app webapp = (Web__app)webxmlMapper.fromXML(reader);
 			if (webapp != null && webapp.context__param != null &&
-					webapp.context__param.size() > 0) {
+					!webapp.context__param.isEmpty()) {
 				for (Context__param contextParam : webapp.context__param) {
 					contextParamMap.put(contextParam.param__name, contextParam.param__value);
 				}
