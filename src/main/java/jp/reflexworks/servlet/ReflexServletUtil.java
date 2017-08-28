@@ -47,6 +47,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	private static final String CACHE_CONTROL_VALUE = NO_CACHE + ", " + NO_STORE
 			+ ", " + MUST_REVALIDATE;
 
+	/** ロガー */
 	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
 
 	/**
@@ -55,10 +56,10 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param model_package modelのパッケージ
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
-	public Object getEntity(HttpServletRequest req, String model_package) 
+	public static Object getEntity(HttpServletRequest req, String model_package) 
 	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return this.getEntity(req, rxmapper);
+		return getEntity(req, rxmapper);
 	}
 	
 	/**
@@ -67,10 +68,10 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param model_package modelのパッケージ
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
-	public Object getEntity(HttpServletRequest req, Map<String, String> model_package) 
+	public static Object getEntity(HttpServletRequest req, Map<String, String> model_package) 
 	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return this.getEntity(req, rxmapper);
+		return getEntity(req, rxmapper);
 	}
 
 	/**
@@ -79,7 +80,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param rxmapper IResourceMapper
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
-	public Object getEntity(HttpServletRequest req, IResourceMapper rxmapper) 
+	public static Object getEntity(HttpServletRequest req, IResourceMapper rxmapper) 
 	throws IOException, JSONException, ClassNotFoundException {
 		// リクエストデータ受信
 		InputStream inputStream = req.getInputStream();
@@ -140,7 +141,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param useJson true:JSON、false:XML
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
-	public Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
+	public static Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
 	throws IOException, JSONException, ClassNotFoundException {
 		Object result = null;
 		boolean changeObj = false;
@@ -180,7 +181,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param rxmapper ResourceMapper
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
-	public Object getXmlEntity(HttpServletRequest req, IResourceMapper rxmapper) 
+	public static Object getXmlEntity(HttpServletRequest req, IResourceMapper rxmapper) 
 	throws IOException, JSONException {
 		BufferedReader in = null;
 		Object result = null;
@@ -201,7 +202,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req HttpServletRequest
 	 * @return リクエストデータ文字列
 	 */
-	public String getBody(HttpServletRequest req) throws IOException, JSONException {
+	public static String getBody(HttpServletRequest req) throws IOException, JSONException {
 		// リクエストデータ受信
 		InputStream inputStream = req.getInputStream();
 		String body = null;
@@ -227,7 +228,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param b BufferedReader
 	 * @return Bufferから読み込んだ文字列
 	 */
-	public String getBody(BufferedReader b) throws IOException {
+	public static String getBody(BufferedReader b) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		String str;
 		boolean isFirst = true;
@@ -256,7 +257,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isDisableDeflate MessagePackをDeflate圧縮しない場合true
 	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
 	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
+	public static void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
 			boolean isNoCache) 
@@ -279,7 +280,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
 	 * @param contentType Content-Type
 	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
+	public static void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict, 
 			boolean isNoCache, String contentType) 
@@ -419,7 +420,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isNoCache ブラウザにキャッシュしない場合true
 	 */
-	public void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
+	public static void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
 			String html, int statusCode, boolean isGZip, boolean isNoCache)
 	throws IOException {
 		doResponse(req, resp, html, 0, null, null, statusCode, isGZip, 
@@ -434,7 +435,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param resp HttpServletResponse
 	 * @param exception 例外オブジェクト
 	 */
-	public void doErrorPage(HttpServletResponse resp, Throwable exception) 
+	public static void doErrorPage(HttpServletResponse resp, Throwable exception) 
 	throws IOException {
 
 		int httpStatus = SC_INTERNAL_SERVER_ERROR;
@@ -564,7 +565,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req HttpServletRequest
 	 * @param resp HttpServletResponse
 	 */
-	public void doResponseFile(HttpServletRequest req, HttpServletResponse resp) 
+	public static void doResponseFile(HttpServletRequest req, HttpServletResponse resp) 
 	throws IOException {
 
 		String reqFileTemp = "";
@@ -627,7 +628,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param in InputStream
 	 * @param contentType content-type
 	 */
-	public void setResponseFile(HttpServletRequest req, HttpServletResponse resp, 
+	public static void setResponseFile(HttpServletRequest req, HttpServletResponse resp, 
 			InputStream in, String contentType)
 	throws IOException {
 		OutputStream out = null;
@@ -664,7 +665,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req
 	 * @return true:gzip対応、false:gzip対応でない
 	 */
-	public boolean isGZip(HttpServletRequest req) {
+	public static boolean isGZip(HttpServletRequest req) {
 		boolean ret = false;
 		if (req != null) {
 			String acceptedEncodings = req.getHeader(HEADER_ACCEPT_ENCODING);	//クライアントの受理可能エンコーディング
@@ -683,7 +684,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * GZip圧縮のレスポンスヘッダを設定します
 	 * @param resp
 	 */
-	public void setGZipHeader(HttpServletResponse resp) {
+	public static void setGZipHeader(HttpServletResponse resp) {
 		resp.setHeader(HEADER_CONTENT_ENCODING, HEADER_VALUE_GZIP);
 	}
 
@@ -720,7 +721,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req HttpServletRequest
 	 * @return 拡張子。ない場合はnull。
 	 */
-	public String getSuffix(HttpServletRequest req) {
+	public static String getSuffix(HttpServletRequest req) {
 		String suffix = null;
 		String uri = req.getRequestURI();
 		int suffixIdx = uri.lastIndexOf(".");
