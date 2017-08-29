@@ -14,7 +14,6 @@ import jp.sourceforge.reflex.core.ResourceMapper;
 import jp.sourceforge.reflex.exception.JSONException;
 import jp.sourceforge.reflex.util.DeflateUtil;
 
-
 /**
  * Reflex サーブレット.
  * <p>
@@ -27,8 +26,6 @@ import jp.sourceforge.reflex.util.DeflateUtil;
  */
 @SuppressWarnings("serial")
 public class ReflexServlet extends HttpServlet implements ReflexServletConst {
-	
-	private ReflexServletUtil util = new ReflexServletUtil();
 
 	/**
 	 * リクエストデータ取得.
@@ -41,7 +38,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public Object getEntity(HttpServletRequest req, String model_package) 
 	throws IOException, JSONException, ClassNotFoundException {
-		return util.getEntity(req, model_package);
+		return ReflexServletUtil.getEntity(req, model_package);
 	}
 
 	/**
@@ -55,7 +52,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public Object getEntity(HttpServletRequest req, Map<String, String> model_package) 
 	throws IOException, JSONException, ClassNotFoundException {
-		return util.getEntity(req, model_package);
+		return ReflexServletUtil.getEntity(req, model_package);
 	}
 
 	/**
@@ -69,7 +66,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public Object getEntity(HttpServletRequest req, IResourceMapper rxmapper) 
 	throws IOException, JSONException, ClassNotFoundException {
-		return util.getEntity(req, rxmapper);
+		return ReflexServletUtil.getEntity(req, rxmapper);
 	}
 	
 	/**
@@ -85,7 +82,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public Object getEntity(String body, String model_package, boolean useJson) 
 	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return util.getEntity(body, rxmapper, useJson);
+		return ReflexServletUtil.getEntity(body, rxmapper, useJson);
 	}
 
 	/**
@@ -102,7 +99,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			boolean useJson) 
 	throws IOException, JSONException, ClassNotFoundException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return util.getEntity(body, rxmapper, useJson);
+		return ReflexServletUtil.getEntity(body, rxmapper, useJson);
 	}
 
 	/**
@@ -117,7 +114,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
 	throws IOException, JSONException, ClassNotFoundException {
-		return util.getEntity(body, rxmapper, useJson);
+		return ReflexServletUtil.getEntity(body, rxmapper, useJson);
 	}
 
 	/**
@@ -132,7 +129,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public Object getXmlEntity(HttpServletRequest req, String model_package) 
 	throws IOException, JSONException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return util.getXmlEntity(req, rxmapper);
+		return ReflexServletUtil.getXmlEntity(req, rxmapper);
 	}
 
 	/**
@@ -147,7 +144,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public Object getXmlEntity(HttpServletRequest req, Map<String, String> model_package) 
 	throws IOException, JSONException {
 		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return util.getXmlEntity(req, rxmapper);
+		return ReflexServletUtil.getXmlEntity(req, rxmapper);
 	}
 
 	/**
@@ -161,7 +158,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 */
 	public Object getXmlEntity(HttpServletRequest req, IResourceMapper rxmapper) 
 	throws IOException, JSONException {
-		return util.getXmlEntity(req, rxmapper);
+		return ReflexServletUtil.getXmlEntity(req, rxmapper);
 	}
 
 	/**
@@ -170,7 +167,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return リクエストデータ文字列
 	 */
 	public String getBody(HttpServletRequest req) throws IOException, JSONException {
-		return util.getBody(req);
+		return ReflexServletUtil.getBody(req);
 	}
 
 	/**
@@ -179,7 +176,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return Bufferから読み込んだ文字列
 	 */
 	public String getBody(BufferedReader b) throws IOException {
-		return util.getBody(b);
+		return ReflexServletUtil.getBody(b);
 	}
 
 	/**
@@ -574,7 +571,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			DeflateUtil deflateUtil, int statusCode, String contentType, boolean isGZip, 
 			boolean isStrict, boolean isNoCache) 
 	throws IOException {
-		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
+		ReflexServletUtil.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
 				statusCode, isGZip, isStrict, isNoCache, contentType);
 	}
 
@@ -601,7 +598,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			String callback, boolean isGZip, boolean isStrict, boolean isNoCache) 
 	throws IOException {
 		// callbackは廃止
-		util.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
+		ReflexServletUtil.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
 				statusCode, isGZip, isStrict, isNoCache, contentType);
 	}
 	*/
@@ -649,7 +646,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param exception 例外オブジェクト
 	 */
 	public void doErrorPage(HttpServletResponse resp, Throwable exception) throws IOException {
-		util.doErrorPage(resp, exception);
+		ReflexServletUtil.doErrorPage(resp, exception);
 	}
 
 	/**
@@ -658,7 +655,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param resp HttpServletResponse
 	 */
 	public void doResponseFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-		util.doResponseFile(req, resp);
+		ReflexServletUtil.doResponseFile(req, resp);
 	}
 
 	/**
@@ -671,7 +668,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void setResponseFile(HttpServletRequest req, HttpServletResponse resp, 
 			InputStream in, String contentType)
 	throws IOException {
-		util.setResponseFile(req, resp, in, contentType);
+		ReflexServletUtil.setResponseFile(req, resp, in, contentType);
 	}
 
 	/**
@@ -680,7 +677,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return true:gzip対応、false:gzip対応でない
 	 */
 	public boolean isGZip(HttpServletRequest req) {
-		return util.isGZip(req);
+		return ReflexServletUtil.isGZip(req);
 	}
 	
 	/**
@@ -688,7 +685,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param resp
 	 */
 	public void setGZipHeader(HttpServletResponse resp) {
-		util.setGZipHeader(resp);
+		ReflexServletUtil.setGZipHeader(resp);
 	}
 
 	/**
@@ -716,7 +713,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return 拡張子。ない場合はnull。
 	 */
 	public String getSuffix(HttpServletRequest req) {
-		return util.getSuffix(req);
+		return ReflexServletUtil.getSuffix(req);
 	}
 	
 	/**
