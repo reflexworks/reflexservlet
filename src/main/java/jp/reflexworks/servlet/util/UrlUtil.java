@@ -29,5 +29,53 @@ public class UrlUtil {
 		}
 		return url;
 	}
+	
+	/**
+	 * リクエストのスキーマからコンテキストパスまで取得
+	 * @param req リクエスト
+	 * @return リクエストのスキーマからコンテキストパスまで
+	 */
+	public static String getFromSchemaToContextPath(HttpServletRequest req) {
+		if (req == null) {
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append(req.getScheme());
+		sb.append("://");
+		sb.append(req.getServerName());
+		int port = req.getServerPort();
+		if (port != 0 && port != 80) {
+			sb.append(":");
+			sb.append(port);
+		}
+		sb.append(req.getContextPath());
+		return sb.toString();
+	}
+	
+	/**
+	 * PathInfo + QueryString文字列に、指定されたパラメータを設定します.
+	 * @param pathInfoQuery PathInfo + Query
+	 * @param key パラメータのキー
+	 * @param val パラメータの値
+	 * @return PathInfo + QueryString文字列に、指定されたパラメータを追加した文字列
+	 */
+	public static String addParam(String pathInfoQuery, String key, String val) {
+		if (StringUtils.isBlank(key)) {
+			return pathInfoQuery;
+		}
+		StringBuilder sb = new StringBuilder();
+		sb.append(pathInfoQuery);
+		if (pathInfoQuery.indexOf("?") > -1) {
+			sb.append("&");
+		} else {
+			sb.append("?");
+		}
+		sb.append(key);
+		if (!StringUtils.isBlank(val)) {
+			sb.append("=");
+			sb.append(val);
+		}
+		return sb.toString();
+	}
 
 }

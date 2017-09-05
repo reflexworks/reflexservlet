@@ -33,6 +33,8 @@ public class UrlUtilTest {
 		TestRequest req = new TestRequest(method, pathInfoQuery, headers, payload, parts);
 		String urlToServletPath = UrlUtil.getFromSchemaToServletPath(req);
 		System.out.println("url = " + req.getRequestURL() + " , pathInfoQuery = " + pathInfoQuery + " , urlToServletPath = " + urlToServletPath);
+		String urlToContextPath = UrlUtil.getFromSchemaToContextPath(req);
+		System.out.println("url = " + req.getRequestURL() + " , pathInfoQuery = " + pathInfoQuery + " , urlToContextPath = " + urlToContextPath);
 		
 	}
 
