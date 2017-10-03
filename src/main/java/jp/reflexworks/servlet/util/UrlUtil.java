@@ -1,5 +1,9 @@
 package jp.reflexworks.servlet.util;
 
+import java.util.Enumeration;
+import java.util.Map;
+import java.util.Set;
+
 import javax.servlet.http.HttpServletRequest;
 
 import jp.sourceforge.reflex.util.StringUtils;
@@ -42,6 +46,20 @@ public class UrlUtil {
 		StringBuilder sb = new StringBuilder();
 		sb.append(req.getScheme());
 		sb.append("://");
+		sb.append(getFromServerToContextPath(req));
+		return sb.toString();
+	}
+	
+	/**
+	 * リクエストのサーバ名からコンテキストパスまで取得
+	 * @param req リクエスト
+	 * @return リクエストのサーバ名からコンテキストパスまで
+	 */
+	public static String getFromServerToContextPath(HttpServletRequest req) {
+		if (req == null) {
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
 		sb.append(req.getServerName());
 		int port = req.getServerPort();
 		if (port != 0 && port != 80) {
@@ -51,7 +69,7 @@ public class UrlUtil {
 		sb.append(req.getContextPath());
 		return sb.toString();
 	}
-	
+
 	/**
 	 * PathInfo + QueryString文字列に、指定されたパラメータを設定します.
 	 * @param pathInfoQuery PathInfo + Query
@@ -74,6 +92,79 @@ public class UrlUtil {
 		if (!StringUtils.isBlank(val)) {
 			sb.append("=");
 			sb.append(val);
+		}
+		return sb.toString();
+	}
+	
+	/**
+	 * リクエストパラメータを編集し、PathInfoとQueryString文字列を作成します.
+	 * @param req リクエスト
+	 * @param ignoreParams 除去するパラメータ
+	 * @param addingParams 追加するパラメータ
+	 * @return PathInfoとQueryString文字列
+	 */
+	public static String editPathInfoQuery(HttpServletRequest req, 
+			Set<String> ignoreParams, Map<String, String> addingParams) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(req.getPathInfo());
+		sb.append(editQueryString(req, ignoreParams, addingParams));
+		return sb.toString();
+	}
+	
+	/**
+	 * QueryStringを組み立てます.
+	 * @param req リクエスト
+	 * @param ignoreParams QueryStringから除去するキーリスト
+	 * @param addingParams QueryStringに加えるキーと値のリスト
+	 */
+	public static String editQueryString(HttpServletRequest req, 
+			Set<String> ignoreParams, Map<String, String> addingParams) {
+		StringBuilder sb = new StringBuilder();
+		if (ignoreParams == null || ignoreParams.size() == 0) {
+			String queryString = req.getQueryString();
+			if (queryString != null) {
+				sb.append("?");
+				sb.append(queryString);
+			}
+		} else {
+			Enumeration<String> names = req.getParameterNames();
+			boolean isFirst = true;
+			while (names.hasMoreElements()) {
+				String name = names.nextElement();
+				if (!ignoreParams.contains(name)) {
+					if (isFirst) {
+						sb.append("?");
+						isFirst = false;
+					} else {
+						sb.append("&");
+					}
+					sb.append(name);
+					sb.append("=");
+					sb.append(req.getParameter(name));
+				}
+			}
+		}
+		
+		if (addingParams != null) {
+			boolean isFirst = false;
+			if (sb.toString().indexOf("?") == -1) {
+				isFirst = true;
+			}
+			for (Map.Entry<String, String> mapEntry : addingParams.entrySet()) {
+				String key = mapEntry.getKey();
+				String value = mapEntry.getValue();
+				if (isFirst) {
+					sb.append("?");
+					isFirst = false;
+				} else {
+					sb.append("&");
+				}
+				sb.append(key);
+				if (!StringUtils.isBlank(value)) {
+					sb.append("=");
+					sb.append(value);
+				}
+			}
 		}
 		return sb.toString();
 	}
