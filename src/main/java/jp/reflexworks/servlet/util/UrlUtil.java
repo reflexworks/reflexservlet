@@ -168,5 +168,37 @@ public class UrlUtil {
 		}
 		return sb.toString();
 	}
+	
+	/**
+	 * リクエストの RequestURL + QueryString を取得.
+	 * @param req リクエスト
+	 * @return RequestURL + QueryString
+	 */
+	public static String getRequestURLWithQueryString(HttpServletRequest req) {
+		StringBuilder url = new StringBuilder();
+		url.append(req.getRequestURL());
+		String queryString = req.getQueryString();
+		if (!StringUtils.isBlank(queryString)) {
+			url.append("?");
+			url.append(queryString);
+		}
+		return url.toString();
+	}
+	
+	/**
+	 * リクエストの RequestURI + QueryString を取得.
+	 * @param req リクエスト
+	 * @return RequestURI + QueryString
+	 */
+	public static String getRequestURIWithQueryString(HttpServletRequest req) {
+		StringBuilder url = new StringBuilder();
+		url.append(req.getRequestURI());
+		String queryString = req.getQueryString();
+		if (!StringUtils.isBlank(queryString)) {
+			url.append("?");
+			url.append(queryString);
+		}
+		return url.toString();
+	}
 
 }
