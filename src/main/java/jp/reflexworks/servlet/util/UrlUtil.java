@@ -200,5 +200,21 @@ public class UrlUtil {
 		}
 		return url.toString();
 	}
+	
+	/**
+	 * PathInfo + QueryString 文字列から、PathInfo部分を抽出.
+	 * 文字列の?以前の部分のみ返します。
+	 * @param pathInfoQuery PathInfo + QueryString
+	 * @return PathInfo
+	 */
+	public static String getPathInfo(String pathInfoQuery) {
+		if (!StringUtils.isBlank(pathInfoQuery)) {
+			int idx = pathInfoQuery.indexOf("?");
+			if (idx > -1) {
+				return pathInfoQuery.substring(0, idx);
+			}
+		}
+		return pathInfoQuery;
+	}
 
 }
