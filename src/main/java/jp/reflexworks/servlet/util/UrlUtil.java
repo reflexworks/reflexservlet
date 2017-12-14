@@ -216,5 +216,27 @@ public class UrlUtil {
 		}
 		return pathInfoQuery;
 	}
+	
+	/**
+	 * URLからホスト名を取得.
+	 * @param url URL
+	 * @return ホスト名(ポート番号含む)
+	 */
+	public static String getHost(String url) {
+		if (StringUtils.isBlank(url)) {
+			return null;
+		}
+		int start = url.indexOf("://");
+		if (start == -1) {
+			start = 0;
+		} else {
+			start = start + 3;
+		}
+		int end = url.indexOf("/", start);
+		if (end == -1) {
+			end = url.length();
+		}
+		return url.substring(start, end);
+	}
 
 }
