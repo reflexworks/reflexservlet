@@ -1,17 +1,24 @@
 package jp.reflexworks.servlet.util;
 
 import java.util.Enumeration;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
+import jp.reflexworks.servlet.ReflexServletConst;
 import jp.sourceforge.reflex.util.StringUtils;
 
 /**
  * URL編集ユーティリティ.
  */
 public class UrlUtil {
+	
+	/** リクエストヘッダ : X-Header-Forwarded-For */
+	public static final String HEADER_FORWARDED_FOR = ReflexServletConst.HEADER_FORWARDED_FOR;
+	/** リクエストヘッダ : x-header-forwarded-for */
+	public static final String HEADER_FORWARDED_FOR_LOWER = HEADER_FORWARDED_FOR.toLowerCase(Locale.ENGLISH);
 	
 	/**
 	 * リクエストのスキーマからサーブレットパスまでを取得.
@@ -237,6 +244,38 @@ public class UrlUtil {
 			end = url.length();
 		}
 		return url.substring(start, end);
+	}
+	
+	/**
+	 * X-Forwarded-Forリクエストヘッダから、LastForwarded IPを取得.
+	 * @param forwardedFor X-Forwarded-Forの値
+	 * @return LastForwarded IP
+	 */
+	public static String getLastForwarded(HttpServletRequest req) {
+		String forwardedFor1 = req.getHeader(HEADER_FORWARDED_FOR);
+		String forwardedFor2 = req.getHeader(HEADER_FORWARDED_FOR_LOWER);
+		String ip = null;
+		if (forwardedFor1 != null) {
+			ip = getLastForwarded(forwardedFor1);
+		} else if (forwardedFor2 != null) {
+			ip = getLastForwarded(forwardedFor2);
+		} else {
+			ip = req.getRemoteAddr();
+		}
+		return ip;
+	}
+
+	/**
+	 * X-Forwarded-Forリクエストヘッダから、LastForwarded IPを取得.
+	 * @param forwardedFor X-Forwarded-Forの値
+	 * @return LastForwarded IP
+	 */
+	public static String getLastForwarded(String forwardedFor) {
+		if (StringUtils.isBlank(forwardedFor)) {
+			return null;
+		}
+		String[] parts = forwardedFor.split(",");
+		return parts[parts.length - 1].trim();
 	}
 
 }

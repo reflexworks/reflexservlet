@@ -256,14 +256,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 * @param isDisableDeflate MessagePackをDeflate圧縮しない場合true
 	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
+	 * @param isSameOrigin SameOrigin指定をする場合true
 	 */
 	public static void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
-			boolean isNoCache) 
+			boolean isNoCache, boolean isSameOrigin) 
 	throws IOException {
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
-				isGZip, isStrict, isNoCache, null);
+				isGZip, isStrict, isNoCache, isSameOrigin, null);
 	}
 	
 	/**
@@ -278,12 +279,13 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
+	 * @param isSameOrigin 「X-Frame-Options: SAMEORIGIN」レスポンスヘッダを指定する場合true
 	 * @param contentType Content-Type
 	 */
 	public static void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict, 
-			boolean isNoCache, String contentType) 
+			boolean isNoCache, boolean isSameOrigin, String contentType) 
 	throws IOException {
 		boolean isRespGZip = isGZip && isGZip(req);
 		
@@ -303,7 +305,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 			resp.addHeader(CACHE_CONTROL, CACHE_CONTROL_VALUE);
 			resp.addHeader(EXPIRES, PAST_DATE);
 		}
-
+		// SAMEORIGIN指定 (クリックジャッキング対策)
+		if (isSameOrigin) {
+			resp.addHeader(HEADER_FRAME_OPTIONS, SAMEORIGIN);
+		}
+		// ブラウザのクロスサイトスクリプティングのフィルタ機能を使用
+		resp.addHeader(HEADER_XSS_PROTECTION, HEADER_XSS_PROTECTION_MODEBLOCK);
+		// HTTPレスポンス全体を検査（sniffing）してコンテンツ タイプを判断し、「Content-Type」を無視した動作を行うことを防止する。(IE対策)
+		resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
+		
 		// status=204 の場合はコンテントを返却しない。
 		if (entities == null || statusCode == HttpStatus.SC_NO_CONTENT) {
 			return;
@@ -377,8 +387,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 					// JSON
 					if (StringUtils.isBlank(contentType)) {
 						resp.setContentType(CONTENT_TYPE_REFLEX_JSON);
-						resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, 
-								HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
+						//resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, 
+						//		HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);	// 全体に指定
 					}
 					
 					// JSON中身
@@ -419,12 +429,14 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isNoCache ブラウザにキャッシュしない場合true
+	 * @param isSameOrigin SameOrigin指定をする場合true
 	 */
 	public static void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
-			String html, int statusCode, boolean isGZip, boolean isNoCache)
+			String html, int statusCode, boolean isGZip, boolean isNoCache,
+			boolean isSameOrigin)
 	throws IOException {
 		doResponse(req, resp, html, 0, null, null, statusCode, isGZip, 
-				false, isNoCache, CONTENT_TYPE_HTML_CHARSET);
+				false, isNoCache, isSameOrigin, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**

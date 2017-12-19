@@ -9,6 +9,7 @@ import javax.servlet.http.Part;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
+import jp.reflexworks.servlet.util.HeaderUtil;
 import jp.reflexworks.servlet.util.UrlUtil;
 import jp.reflexworks.test.servlet.TestRequest;
 
@@ -53,26 +54,31 @@ public class UrlUtilTest {
 		url = "https://vte.cx";
 		host = UrlUtil.getHost(url);
 		System.out.println("url = " + url + ", host = " + host);
+		System.out.println("url = " + url + ", urlHost = " + HeaderUtil.getURLHost(url));
 		assertEquals(host, "vte.cx");
 		
 		url = "https://vte.cx/d";
 		host = UrlUtil.getHost(url);
 		System.out.println("url = " + url + ", host = " + host);
+		System.out.println("url = " + url + ", urlHost = " + HeaderUtil.getURLHost(url));
 		assertEquals(host, "vte.cx");
 		
 		url = "http://localhost:8080";
 		host = UrlUtil.getHost(url);
 		System.out.println("url = " + url + ", host = " + host);
+		System.out.println("url = " + url + ", urlHost = " + HeaderUtil.getURLHost(url));
 		assertEquals(host, "localhost:8080");
 		
 		url = "http://localhost:8080/index.html";
 		host = UrlUtil.getHost(url);
 		System.out.println("url = " + url + ", host = " + host);
+		System.out.println("url = " + url + ", urlHost = " + HeaderUtil.getURLHost(url));
 		assertEquals(host, "localhost:8080");
 		
 		url = "vte.cx/vt";
 		host = UrlUtil.getHost(url);
 		System.out.println("url = " + url + ", host = " + host);
+		System.out.println("url = " + url + ", urlHost = " + HeaderUtil.getURLHost(url));
 		assertEquals(host, "vte.cx");
 		
 		System.out.println("--- testGetHost end ---");
