@@ -51,6 +51,8 @@ public class TestRequest implements HttpServletRequest {
 	private String method;
 	/** pathInfo */
 	private String pathInfo;
+	/** QueryString */
+	private String queryString;
 	/** payload */
 	private byte[] payload;
 	/** part */
@@ -89,8 +91,8 @@ public class TestRequest implements HttpServletRequest {
 				pathInfo = pathInfoQuery;
 			} else {
 				pathInfo = pathInfoQuery.substring(0, idx);
-				String paramsStr = pathInfoQuery.substring(idx + 1);
-				String[] params = paramsStr.split("&");
+				queryString = pathInfoQuery.substring(idx + 1);
+				String[] params = queryString.split("&");
 				for (String param : params) {
 					String name = null;
 					String val = null;
@@ -352,8 +354,7 @@ public class TestRequest implements HttpServletRequest {
 	}
 
 	public String getQueryString() {
-		// TODO 自動生成されたメソッド・スタブ
-		return null;
+		return queryString;
 	}
 
 	public String getRemoteUser() {

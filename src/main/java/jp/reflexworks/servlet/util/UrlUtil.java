@@ -1,6 +1,5 @@
 package jp.reflexworks.servlet.util;
 
-import java.util.Enumeration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -126,37 +125,62 @@ public class UrlUtil {
 	 */
 	public static String editQueryString(HttpServletRequest req, 
 			Set<String> ignoreParams, Map<String, String> addingParams) {
+		if (req == null) {
+			return null;
+		}
+		return editQueryString(req.getQueryString(), ignoreParams, addingParams);
+	}
+
+	/**
+	 * QueryStringを組み立てます.
+	 * @param queryString クエリ文字列
+	 * @param ignoreParams QueryStringから除去するキーリスト
+	 * @param addingParams QueryStringに加えるキーと値のリスト
+	 */
+	public static String editQueryString(String queryString, 
+			Set<String> ignoreParams, Map<String, String> addingParams) {
+		boolean isFirst = true;
 		StringBuilder sb = new StringBuilder();
-		if (ignoreParams == null || ignoreParams.size() == 0) {
-			String queryString = req.getQueryString();
-			if (queryString != null) {
-				sb.append("?");
-				sb.append(queryString);
-			}
-		} else {
-			Enumeration<String> names = req.getParameterNames();
-			boolean isFirst = true;
-			while (names.hasMoreElements()) {
-				String name = names.nextElement();
-				if (!ignoreParams.contains(name)) {
-					if (isFirst) {
-						sb.append("?");
-						isFirst = false;
-					} else {
-						sb.append("&");
+		if (!StringUtils.isBlank(queryString)) {
+			if (ignoreParams == null || ignoreParams.isEmpty()) {
+				if (queryString != null) {
+					sb.append("?");
+					sb.append(queryString);
+					isFirst = false;
+				}
+			} else {
+				String[] queryStringParts = null;
+				if (!StringUtils.isBlank(queryString)) {
+					queryStringParts = queryString.split("&");
+					for (String queryStringPart : queryStringParts) {
+						int idx = queryStringPart.indexOf("=");
+						String name = null;
+						String value = null;
+						if (idx > 0) {
+							name = queryStringPart.substring(0, idx);
+							value = queryStringPart.substring(idx + 1);
+						} else {
+							name = queryStringPart;
+						}
+						if (!ignoreParams.contains(name)) {
+							if (isFirst) {
+								sb.append("?");
+								isFirst = false;
+							} else {
+								sb.append("&");
+							}
+							sb.append(name);
+							if (value != null) {
+								sb.append("=");
+								sb.append(value);
+							}
+						}
 					}
-					sb.append(name);
-					sb.append("=");
-					sb.append(req.getParameter(name));
 				}
 			}
 		}
 		
-		if (addingParams != null) {
-			boolean isFirst = false;
-			if (sb.toString().indexOf("?") == -1) {
-				isFirst = true;
-			}
+		if (addingParams != null && !addingParams.isEmpty()) {
 			for (Map.Entry<String, String> mapEntry : addingParams.entrySet()) {
 				String key = mapEntry.getKey();
 				String value = mapEntry.getValue();

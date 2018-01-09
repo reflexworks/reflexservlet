@@ -1,8 +1,10 @@
 package jp.reflexworks.test;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
+import java.util.Set;
 
 import javax.servlet.http.Part;
 
@@ -37,6 +39,31 @@ public class UrlUtilTest {
 		System.out.println("url = " + req.getRequestURL() + " , pathInfoQuery = " + pathInfoQuery + " , urlToServletPath = " + urlToServletPath);
 		String urlToContextPath = UrlUtil.getFromSchemaToContextPath(req);
 		System.out.println("url = " + req.getRequestURL() + " , pathInfoQuery = " + pathInfoQuery + " , urlToContextPath = " + urlToContextPath);
+		
+		// editQueryString
+		Set<String> ignoreParams = null;
+		Map<String, String> addingParams = null;
+		
+		String editQueryString = UrlUtil.editQueryString(req, ignoreParams, addingParams);
+		System.out.println("queryString = " + req.getQueryString() + " , edited = " + editQueryString);
+		
+		ignoreParams = new HashSet<String>();
+		ignoreParams.add("_pagination");
+		ignoreParams.add("x");
+		ignoreParams.add("m");
+		ignoreParams.add("p");
+		ignoreParams.add("n");
+		ignoreParams.add("_RXID");
+		addingParams = new HashMap<String, String>();
+		
+		String queryString = "item.size=L&item.color=green&_pagination=5&m&l=200&p=74yf74hbuhfh";
+		editQueryString = UrlUtil.editQueryString(queryString, ignoreParams, addingParams);
+		System.out.println("queryString = " + queryString + " , edited = " + editQueryString);
+		
+		queryString = "_RXID=xxxxx&item.size=L&item.color=green&_pagination=5&m&l=200&p=74yf74hbuhfh";
+		editQueryString = UrlUtil.editQueryString(queryString, ignoreParams, addingParams);
+		System.out.println("queryString = " + queryString + " , edited = " + editQueryString);
+		
 		
 	}
 	
