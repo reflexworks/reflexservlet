@@ -318,11 +318,12 @@ public class ReflexServletUtil implements ReflexServletConst {
 		if (entities == null || statusCode == HttpStatus.SC_NO_CONTENT) {
 			return;
 		}
-
-		// MessagePackの場合は、PrintWriterでなくOutputStreamを使用する。
-		if (!(entities instanceof String) && format == FORMAT_MESSAGEPACK) {
+		
+		// MessagePackまたはバイト配列の場合は、PrintWriterでなくOutputStreamを使用する。
+		if ((!(entities instanceof String) && format == FORMAT_MESSAGEPACK) ||
+				entities instanceof byte[]) {
 			// MessagePack
-			if (StringUtils.isBlank(contentType)) {
+			if (format == FORMAT_MESSAGEPACK && StringUtils.isBlank(contentType)) {
 				resp.setContentType(CONTENT_TYPE_MESSAGEPACK);
 			}
 			
@@ -339,20 +340,26 @@ public class ReflexServletUtil implements ReflexServletConst {
 					out = resp.getOutputStream();
 				}
 				
-				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
 				byte[] respData = null;
-				byte[] msgData = rxmapper.toMessagePack(entities);
-				if (isDeflate) {
-					// Deflate圧縮
-					if (deflateUtil != null) {
-						respData = deflateUtil.deflate(msgData);
-					} else {
-						respData = DeflateUtil.deflateOneTime(msgData);
-					}
+				if (entities instanceof byte[]) {
+					// バイト配列データ
+					respData = (byte[])entities;
 				} else {
-					// Deflateなし
-					respData = msgData;
+					// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
+					byte[] msgData = rxmapper.toMessagePack(entities);
+					if (isDeflate) {
+						// Deflate圧縮
+						if (deflateUtil != null) {
+							respData = deflateUtil.deflate(msgData);
+						} else {
+							respData = DeflateUtil.deflateOneTime(msgData);
+						}
+					} else {
+						// Deflateなし
+						respData = msgData;
+					}
 				}
+				
 				if (respData != null && respData.length > 0) {
 					out.write(respData);
 				}
