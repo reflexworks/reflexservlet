@@ -71,13 +71,7 @@ public class WsseUtil extends AuthTokenUtil {
 	 * @return WSSE認証情報
 	 */
 	public WsseAuth getWsseAuthFromHeader(HttpServletRequest req) {
-		String value = req.getHeader(WSSE);
-		if (StringUtils.isBlank(value)) {
-			value = req.getHeader(WSSE_UPPER_LOWER);
-		}
-		if (StringUtils.isBlank(value)) {
-			value = req.getHeader(WSSE_LOWER);
-		}
+		String value = getWSSEValue(req);
 		if (!StringUtils.isBlank(value)) {
 			WsseAuth auth = parseWSSEheader(value);
 			// 空の場合はブランクオブジェクトを作成して返却する。
@@ -86,16 +80,13 @@ public class WsseUtil extends AuthTokenUtil {
 			}
 			return auth;
 		}
-		value = getRXIDValue(req.getHeaders(HEADER_AUTHORIZATION));
-		if (value != null) {
-			String rxid = extractRXID(value);
-			if (!StringUtils.isBlank(rxid)) {
-				WsseAuth auth = parseRXID(rxid);
-				if (auth == null) {
-					auth = createBlankWsseAuth(true);
-				}
-				return auth;
+		String rxid = getRXIDValueByHeader(req);
+		if (!StringUtils.isBlank(rxid)) {
+			WsseAuth auth = parseRXID(rxid);
+			if (auth == null) {
+				auth = createBlankWsseAuth(true);
 			}
+			return auth;
 		}
 		return null;
 	}
@@ -107,11 +98,7 @@ public class WsseUtil extends AuthTokenUtil {
 	 */
 	public WsseAuth parseWSSEparam(HttpServletRequest req) {
 		WsseAuth auth = null;
-		String rxid = URLDecoderPlus.urlDecode(req.getParameter(RXID));
-		if (rxid == null) {
-			// 旧フォーマットも受け付ける。
-			rxid = URLDecoderPlus.urlDecode(req.getParameter(RXID_LEGACY));
-		}
+		String rxid = getRXIDValueByParam(req);
 		if (rxid != null) {
 			auth = parseRXID(rxid);
 			if (auth == null) {
@@ -265,6 +252,59 @@ public class WsseUtil extends AuthTokenUtil {
 			//String rxid = rxids.get(0);
 			String rxid = getRXIDValue(rxids);
 			return extractRXID(rxid);
+		}
+		return null;
+	}
+	
+	/**
+	 * リクエストからWSSE文字列を取得.
+	 * @param req リクエスト
+	 * @return WSSE文字列
+	 */
+	public String getWSSEValue(HttpServletRequest req) {
+		String value = req.getHeader(WSSE);
+		if (StringUtils.isBlank(value)) {
+			value = req.getHeader(WSSE_UPPER_LOWER);
+		}
+		if (StringUtils.isBlank(value)) {
+			value = req.getHeader(WSSE_LOWER);
+		}
+		return value;
+	}
+	
+	/**
+	 * リクエストヘッダからRXID文字列を取得.
+	 * @param req リクエスト
+	 * @return RXID
+	 */
+	public String getRXIDValueByHeader(HttpServletRequest req) {
+		String value = getRXIDValue(req.getHeaders(HEADER_AUTHORIZATION));
+		return extractRXID(value);
+	}
+	
+	/**
+	 * リクエストのURLパラメータからRXIDを取得.
+	 * @param req リクエスト
+	 * @return RXID
+	 */
+	public String getRXIDValueByParam(HttpServletRequest req) {
+		String rxid = URLDecoderPlus.urlDecode(req.getParameter(RXID));
+		if (rxid == null) {
+			// 旧フォーマットも受け付ける。
+			rxid = URLDecoderPlus.urlDecode(req.getParameter(RXID_LEGACY));
+		}
+		return rxid;
+	}
+	
+	/**
+	 * リクエストのCookieからRXIDを取得.
+	 * @param req リクエスト
+	 * @return RXID
+	 */
+	public String getRXIDValueByCookie(HttpServletRequest req) {
+		Cookie cookie = getCookie(req, RXID_LEGACY);
+		if (cookie != null) {
+			return cookie.getValue();
 		}
 		return null;
 	}
