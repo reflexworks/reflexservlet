@@ -101,13 +101,24 @@ public class UrlUtilTest {
 		System.out.println("url = " + url + ", host = " + host);
 		System.out.println("url = " + url + ", urlHost = " + HeaderUtil.getURLHost(url));
 		assertEquals(host, "localhost:8080");
-		
+		String hostWithoutPort = UrlUtil.getHostWithoutPort(url);
+		System.out.println("url = " + url + ", hostWithoutPort = " + hostWithoutPort);
+		assertEquals(hostWithoutPort, "localhost");
+
 		url = "vte.cx/vt";
 		host = UrlUtil.getHost(url);
 		System.out.println("url = " + url + ", host = " + host);
 		System.out.println("url = " + url + ", urlHost = " + HeaderUtil.getURLHost(url));
 		assertEquals(host, "vte.cx");
 		
+		url = "localhost:8080";
+		host = UrlUtil.getHost(url);
+		System.out.println("url = " + url + ", host = " + host);
+		assertEquals(host, "localhost:8080");
+		hostWithoutPort = UrlUtil.getHostWithoutPort(url);
+		System.out.println("url = " + url + ", hostWithoutPort = " + hostWithoutPort);
+		assertEquals(hostWithoutPort, "localhost");
+
 		System.out.println("--- testGetHost end ---");
 	}
 

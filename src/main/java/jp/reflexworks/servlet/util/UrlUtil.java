@@ -271,6 +271,25 @@ public class UrlUtil {
 	}
 	
 	/**
+	 * URLからホスト名を取得.
+	 * ポート番号がついている場合は除く。
+	 * @param url URL
+	 * @return ホスト名(ポート番号除く)
+	 */
+	public static String getHostWithoutPort(String url) {
+		String urlAndPort = getHost(url);
+		if (StringUtils.isBlank(urlAndPort)) {
+			return urlAndPort;
+		}
+		int idx = urlAndPort.indexOf(":");
+		if (idx > -1) {
+			return urlAndPort.substring(0, idx);
+		} else {
+			return urlAndPort;
+		}
+	}
+
+	/**
 	 * X-Forwarded-Forリクエストヘッダから、LastForwarded IPを取得.
 	 * @param forwardedFor X-Forwarded-Forの値
 	 * @return LastForwarded IP
