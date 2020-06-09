@@ -26,6 +26,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 
 import jp.reflexworks.servlet.util.EnumerationConverter;
@@ -35,7 +36,7 @@ import jp.sourceforge.reflex.util.StringUtils;
  * テスト用リクエストクラス
  */
 public class TestRequest implements HttpServletRequest {
-	
+
 	/** attribute */
 	private Map<String, Object> attributes = new HashMap<String, Object>();
 	/** Charactor-Encoding */
@@ -57,7 +58,7 @@ public class TestRequest implements HttpServletRequest {
 	private byte[] payload;
 	/** part */
 	private List<Part> parts;
-	
+
 	// 今のところ固定値
 	/** protocol */
 	private String protocol = "HTTP/1.1";
@@ -71,7 +72,7 @@ public class TestRequest implements HttpServletRequest {
 	private String contextPath = "";
 	/** servlet path */
 	private String servletPath = "/d";
-	
+
 	/**
 	 * コンストラクタ
 	 * @param method method
@@ -441,12 +442,12 @@ public class TestRequest implements HttpServletRequest {
 
 	public void login(String username, String password) throws ServletException {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void logout() throws ServletException {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public Collection<Part> getParts() throws IOException, ServletException {
@@ -463,13 +464,31 @@ public class TestRequest implements HttpServletRequest {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * PathInfoを設定
 	 * @param pathInfo PathInfo
 	 */
 	public void setPathInfo(String pathInfo) {
 		this.pathInfo = pathInfo;
+	}
+
+	@Override
+	public long getContentLengthLong() {
+		// TODO 自動生成されたメソッド・スタブ
+		return 0;
+	}
+
+	@Override
+	public String changeSessionId() {
+		// TODO 自動生成されたメソッド・スタブ
+		return null;
+	}
+
+	@Override
+	public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
+		// TODO 自動生成されたメソッド・スタブ
+		return null;
 	}
 
 }

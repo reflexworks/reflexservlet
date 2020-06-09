@@ -36,22 +36,22 @@ public class TestResponse implements HttpServletResponse {
 
 	public void setCharacterEncoding(String charset) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setContentLength(int len) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setContentType(String type) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setBufferSize(int size) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public int getBufferSize() {
@@ -61,12 +61,12 @@ public class TestResponse implements HttpServletResponse {
 
 	public void flushBuffer() throws IOException {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void resetBuffer() {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public boolean isCommitted() {
@@ -76,12 +76,12 @@ public class TestResponse implements HttpServletResponse {
 
 	public void reset() {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setLocale(Locale loc) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public Locale getLocale() {
@@ -91,7 +91,7 @@ public class TestResponse implements HttpServletResponse {
 
 	public void addCookie(Cookie cookie) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public boolean containsHeader(String name) {
@@ -121,57 +121,57 @@ public class TestResponse implements HttpServletResponse {
 
 	public void sendError(int sc, String msg) throws IOException {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void sendError(int sc) throws IOException {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void sendRedirect(String location) throws IOException {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setDateHeader(String name, long date) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void addDateHeader(String name, long date) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setHeader(String name, String value) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void addHeader(String name, String value) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setIntHeader(String name, int value) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void addIntHeader(String name, int value) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setStatus(int sc) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void setStatus(int sc, String sm) {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public int getStatus() {
@@ -192,6 +192,12 @@ public class TestResponse implements HttpServletResponse {
 	public Collection<String> getHeaderNames() {
 		// TODO 自動生成されたメソッド・スタブ
 		return null;
+	}
+
+	@Override
+	public void setContentLengthLong(long len) {
+		// TODO 自動生成されたメソッド・スタブ
+
 	}
 
 }

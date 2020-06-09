@@ -16,14 +16,14 @@ import javax.servlet.http.Part;
  * Partを継承したクラス.
  */
 public class TestPart implements Part {
-	
+
 	/** payload */
 	private byte[] payload;
 	/** header */
 	private Map<String, List<String>> headers = new HashMap<String, List<String>>();	// TODO コンストラクタで生成
 	/** name */
 	private String name;
-	
+
 	/**
 	 * コンストラクタ
 	 * @param name name
@@ -67,12 +67,12 @@ public class TestPart implements Part {
 
 	public void write(String fileName) throws IOException {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public void delete() throws IOException {
 		// TODO 自動生成されたメソッド・スタブ
-		
+
 	}
 
 	public String getHeader(String name) {
@@ -89,6 +89,12 @@ public class TestPart implements Part {
 
 	public Collection<String> getHeaderNames() {
 		return headers.keySet();
+	}
+
+	@Override
+	public String getSubmittedFileName() {
+		// TODO 自動生成されたメソッド・スタブ
+		return null;
 	}
 
 }
