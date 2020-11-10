@@ -1,10 +1,15 @@
 package jp.reflexworks.servlet.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jp.reflexworks.servlet.ReflexServletConst;
 import jp.sourceforge.reflex.util.StringUtils;
@@ -13,12 +18,15 @@ import jp.sourceforge.reflex.util.StringUtils;
  * URL編集ユーティリティ.
  */
 public class UrlUtil {
-	
+
 	/** リクエストヘッダ : X-Header-Forwarded-For */
 	public static final String HEADER_FORWARDED_FOR = ReflexServletConst.HEADER_FORWARDED_FOR;
 	/** リクエストヘッダ : x-header-forwarded-for */
 	public static final String HEADER_FORWARDED_FOR_LOWER = HEADER_FORWARDED_FOR.toLowerCase(Locale.ENGLISH);
-	
+
+	/** ロガー. */
+	private static Logger logger = LoggerFactory.getLogger(UrlUtil.class);
+
 	/**
 	 * リクエストのスキーマからサーブレットパスまでを取得.
 	 * @param req リクエスト
@@ -39,7 +47,7 @@ public class UrlUtil {
 		}
 		return url;
 	}
-	
+
 	/**
 	 * リクエストのスキーマからコンテキストパスまで取得
 	 * @param req リクエスト
@@ -55,7 +63,7 @@ public class UrlUtil {
 		sb.append(getFromServerToContextPath(req));
 		return sb.toString();
 	}
-	
+
 	/**
 	 * リクエストのサーバ名からコンテキストパスまで取得
 	 * @param req リクエスト
@@ -101,7 +109,7 @@ public class UrlUtil {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * リクエストパラメータを編集し、PathInfoとQueryString文字列を作成します.
 	 * @param req リクエスト
@@ -109,21 +117,21 @@ public class UrlUtil {
 	 * @param addingParams 追加するパラメータ
 	 * @return PathInfoとQueryString文字列
 	 */
-	public static String editPathInfoQuery(HttpServletRequest req, 
+	public static String editPathInfoQuery(HttpServletRequest req,
 			Set<String> ignoreParams, Map<String, String> addingParams) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(req.getPathInfo());
 		sb.append(editQueryString(req, ignoreParams, addingParams));
 		return sb.toString();
 	}
-	
+
 	/**
 	 * QueryStringを組み立てます.
 	 * @param req リクエスト
 	 * @param ignoreParams QueryStringから除去するキーリスト
 	 * @param addingParams QueryStringに加えるキーと値のリスト
 	 */
-	public static String editQueryString(HttpServletRequest req, 
+	public static String editQueryString(HttpServletRequest req,
 			Set<String> ignoreParams, Map<String, String> addingParams) {
 		if (req == null) {
 			return null;
@@ -137,7 +145,7 @@ public class UrlUtil {
 	 * @param ignoreParams QueryStringから除去するキーリスト
 	 * @param addingParams QueryStringに加えるキーと値のリスト
 	 */
-	public static String editQueryString(String queryString, 
+	public static String editQueryString(String queryString,
 			Set<String> ignoreParams, Map<String, String> addingParams) {
 		boolean isFirst = true;
 		StringBuilder sb = new StringBuilder();
@@ -179,7 +187,7 @@ public class UrlUtil {
 				}
 			}
 		}
-		
+
 		if (addingParams != null && !addingParams.isEmpty()) {
 			for (Map.Entry<String, String> mapEntry : addingParams.entrySet()) {
 				String key = mapEntry.getKey();
@@ -199,7 +207,7 @@ public class UrlUtil {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * リクエストの RequestURL + QueryString を取得.
 	 * @param req リクエスト
@@ -215,7 +223,7 @@ public class UrlUtil {
 		}
 		return url.toString();
 	}
-	
+
 	/**
 	 * リクエストの RequestURI + QueryString を取得.
 	 * @param req リクエスト
@@ -231,7 +239,7 @@ public class UrlUtil {
 		}
 		return url.toString();
 	}
-	
+
 	/**
 	 * PathInfo + QueryString 文字列から、PathInfo部分を抽出.
 	 * 文字列の?以前の部分のみ返します。
@@ -247,7 +255,7 @@ public class UrlUtil {
 		}
 		return pathInfoQuery;
 	}
-	
+
 	/**
 	 * URLからホスト名を取得.
 	 * @param url URL
@@ -269,7 +277,7 @@ public class UrlUtil {
 		}
 		return url.substring(start, end);
 	}
-	
+
 	/**
 	 * URLからホスト名を取得.
 	 * ポート番号がついている場合は除く。
@@ -319,6 +327,23 @@ public class UrlUtil {
 		}
 		String[] parts = forwardedFor.split(",");
 		return parts[parts.length - 1].trim();
+	}
+
+	/**
+	 * URLエンコード
+	 * @param str 文字列
+	 * @return URLエンコードした文字列
+	 */
+	public static String urlEncode(String str) {
+		if (StringUtils.isBlank(str)) {
+			return str;
+		}
+		try {
+			return URLEncoder.encode(str, ReflexServletConst.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			logger.warn("[urlEncode] UnsupportedEncodingException: " + e.getMessage());
+		}
+		return str;	// そのまま返す
 	}
 
 }
