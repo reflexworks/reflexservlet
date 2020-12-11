@@ -1,10 +1,15 @@
 package jp.reflexworks.servlet.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jp.reflexworks.servlet.ReflexServletConst;
 import jp.sourceforge.reflex.util.StringUtils;
@@ -13,12 +18,15 @@ import jp.sourceforge.reflex.util.StringUtils;
  * URL編集ユーティリティ.
  */
 public class UrlUtil {
-	
+
 	/** リクエストヘッダ : X-Header-Forwarded-For */
 	public static final String HEADER_FORWARDED_FOR = ReflexServletConst.HEADER_FORWARDED_FOR;
 	/** リクエストヘッダ : x-header-forwarded-for */
 	public static final String HEADER_FORWARDED_FOR_LOWER = HEADER_FORWARDED_FOR.toLowerCase(Locale.ENGLISH);
-	
+
+	/** ロガー. */
+	private static Logger logger = LoggerFactory.getLogger(UrlUtil.class);
+
 	/**
 	 * リクエストのスキーマからサーブレットパスまでを取得.
 	 * @param req リクエスト
@@ -39,7 +47,7 @@ public class UrlUtil {
 		}
 		return url;
 	}
-	
+
 	/**
 	 * リクエストのスキーマからコンテキストパスまで取得
 	 * @param req リクエスト
@@ -55,7 +63,7 @@ public class UrlUtil {
 		sb.append(getFromServerToContextPath(req));
 		return sb.toString();
 	}
-	
+
 	/**
 	 * リクエストのサーバ名からコンテキストパスまで取得
 	 * @param req リクエスト
@@ -101,34 +109,48 @@ public class UrlUtil {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * リクエストパラメータを編集し、PathInfoとQueryString文字列を作成します.
 	 * @param req リクエスト
 	 * @param ignoreParams 除去するパラメータ
 	 * @param addingParams 追加するパラメータ
+	 * @param isURLEncode QueryStringの値をURLエンコードする場合true
 	 * @return PathInfoとQueryString文字列
 	 */
-	public static String editPathInfoQuery(HttpServletRequest req, 
-			Set<String> ignoreParams, Map<String, String> addingParams) {
+	public static String editPathInfoQuery(HttpServletRequest req,
+			Set<String> ignoreParams, Map<String, String> addingParams,
+			boolean isURLEncode) {
+		String pathInfo = req.getPathInfo();
 		StringBuilder sb = new StringBuilder();
-		sb.append(req.getPathInfo());
-		sb.append(editQueryString(req, ignoreParams, addingParams));
+		if (!isURLEncode || StringUtils.isBlank(pathInfo) || "/".equals(pathInfo)) {
+			sb.append(pathInfo);
+		} else {
+			String[] uriParts = pathInfo.split("\\/");
+			int len = uriParts.length;
+			for (int i = 1; i < len; i++) {	// 添字1から
+				sb.append("/");
+				sb.append(urlEncode(uriParts[i]));
+			}
+		}
+		sb.append(editQueryString(req, ignoreParams, addingParams, isURLEncode));
 		return sb.toString();
 	}
-	
+
 	/**
 	 * QueryStringを組み立てます.
 	 * @param req リクエスト
 	 * @param ignoreParams QueryStringから除去するキーリスト
 	 * @param addingParams QueryStringに加えるキーと値のリスト
+	 * @param isURLEncode QueryStringの値をURLエンコードする場合true
 	 */
-	public static String editQueryString(HttpServletRequest req, 
-			Set<String> ignoreParams, Map<String, String> addingParams) {
+	public static String editQueryString(HttpServletRequest req,
+			Set<String> ignoreParams, Map<String, String> addingParams,
+			boolean isURLEncode) {
 		if (req == null) {
 			return null;
 		}
-		return editQueryString(req.getQueryString(), ignoreParams, addingParams);
+		return editQueryString(req.getQueryString(), ignoreParams, addingParams, isURLEncode);
 	}
 
 	/**
@@ -136,12 +158,15 @@ public class UrlUtil {
 	 * @param queryString クエリ文字列
 	 * @param ignoreParams QueryStringから除去するキーリスト
 	 * @param addingParams QueryStringに加えるキーと値のリスト
+	 * @param isURLEncode QueryStringの値をURLエンコードする場合true
 	 */
-	public static String editQueryString(String queryString, 
-			Set<String> ignoreParams, Map<String, String> addingParams) {
+	public static String editQueryString(String queryString,
+			Set<String> ignoreParams, Map<String, String> addingParams,
+			boolean isURLEncode) {
 		boolean isFirst = true;
 		StringBuilder sb = new StringBuilder();
 		if (!StringUtils.isBlank(queryString)) {
+			/*
 			if (ignoreParams == null || ignoreParams.isEmpty()) {
 				if (queryString != null) {
 					sb.append("?");
@@ -149,6 +174,7 @@ public class UrlUtil {
 					isFirst = false;
 				}
 			} else {
+			*/
 				String[] queryStringParts = null;
 				if (!StringUtils.isBlank(queryString)) {
 					queryStringParts = queryString.split("&");
@@ -162,24 +188,24 @@ public class UrlUtil {
 						} else {
 							name = queryStringPart;
 						}
-						if (!ignoreParams.contains(name)) {
+						if (ignoreParams == null || !ignoreParams.contains(name)) {
 							if (isFirst) {
 								sb.append("?");
 								isFirst = false;
 							} else {
 								sb.append("&");
 							}
-							sb.append(name);
+							sb.append(urlEncode(name, isURLEncode));
 							if (value != null) {
 								sb.append("=");
-								sb.append(value);
+								sb.append(urlEncode(value, isURLEncode));
 							}
 						}
 					}
 				}
-			}
+			//}
 		}
-		
+
 		if (addingParams != null && !addingParams.isEmpty()) {
 			for (Map.Entry<String, String> mapEntry : addingParams.entrySet()) {
 				String key = mapEntry.getKey();
@@ -190,16 +216,16 @@ public class UrlUtil {
 				} else {
 					sb.append("&");
 				}
-				sb.append(key);
+				sb.append(urlEncode(key, isURLEncode));
 				if (!StringUtils.isBlank(value)) {
 					sb.append("=");
-					sb.append(value);
+					sb.append(urlEncode(value, isURLEncode));
 				}
 			}
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * リクエストの RequestURL + QueryString を取得.
 	 * @param req リクエスト
@@ -215,7 +241,7 @@ public class UrlUtil {
 		}
 		return url.toString();
 	}
-	
+
 	/**
 	 * リクエストの RequestURI + QueryString を取得.
 	 * @param req リクエスト
@@ -231,7 +257,7 @@ public class UrlUtil {
 		}
 		return url.toString();
 	}
-	
+
 	/**
 	 * PathInfo + QueryString 文字列から、PathInfo部分を抽出.
 	 * 文字列の?以前の部分のみ返します。
@@ -247,7 +273,7 @@ public class UrlUtil {
 		}
 		return pathInfoQuery;
 	}
-	
+
 	/**
 	 * URLからホスト名を取得.
 	 * @param url URL
@@ -269,7 +295,7 @@ public class UrlUtil {
 		}
 		return url.substring(start, end);
 	}
-	
+
 	/**
 	 * URLからホスト名を取得.
 	 * ポート番号がついている場合は除く。
@@ -319,6 +345,37 @@ public class UrlUtil {
 		}
 		String[] parts = forwardedFor.split(",");
 		return parts[parts.length - 1].trim();
+	}
+
+	/**
+	 * URLエンコード
+	 * @param str 文字列
+	 * @return URLエンコードした文字列
+	 */
+	public static String urlEncode(String str) {
+		if (StringUtils.isBlank(str)) {
+			return str;
+		}
+		try {
+			return URLEncoder.encode(str, ReflexServletConst.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			logger.warn("[urlEncode] UnsupportedEncodingException: " + e.getMessage());
+		}
+		return str;	// そのまま返す
+	}
+
+	/**
+	 * URLエンコード指定がある場合、URLエンコードを行い返却する.
+	 * @param value 値
+	 * @param isURIEncode URLエンコードを行う場合true
+	 * @return 編集した値
+	 */
+	private static String urlEncode(String value, boolean isURIEncode) {
+		if (isURIEncode) {
+			return urlEncode(value);
+		} else {
+			return value;
+		}
 	}
 
 }
