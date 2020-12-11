@@ -115,13 +115,25 @@ public class UrlUtil {
 	 * @param req リクエスト
 	 * @param ignoreParams 除去するパラメータ
 	 * @param addingParams 追加するパラメータ
+	 * @param isURLEncode QueryStringの値をURLエンコードする場合true
 	 * @return PathInfoとQueryString文字列
 	 */
 	public static String editPathInfoQuery(HttpServletRequest req,
-			Set<String> ignoreParams, Map<String, String> addingParams) {
+			Set<String> ignoreParams, Map<String, String> addingParams,
+			boolean isURLEncode) {
+		String pathInfo = req.getPathInfo();
 		StringBuilder sb = new StringBuilder();
-		sb.append(req.getPathInfo());
-		sb.append(editQueryString(req, ignoreParams, addingParams));
+		if (!isURLEncode || StringUtils.isBlank(pathInfo) || "/".equals(pathInfo)) {
+			sb.append(pathInfo);
+		} else {
+			String[] uriParts = pathInfo.split("\\/");
+			int len = uriParts.length;
+			for (int i = 1; i < len; i++) {	// 添字1から
+				sb.append("/");
+				sb.append(urlEncode(uriParts[i]));
+			}
+		}
+		sb.append(editQueryString(req, ignoreParams, addingParams, isURLEncode));
 		return sb.toString();
 	}
 
@@ -130,13 +142,15 @@ public class UrlUtil {
 	 * @param req リクエスト
 	 * @param ignoreParams QueryStringから除去するキーリスト
 	 * @param addingParams QueryStringに加えるキーと値のリスト
+	 * @param isURLEncode QueryStringの値をURLエンコードする場合true
 	 */
 	public static String editQueryString(HttpServletRequest req,
-			Set<String> ignoreParams, Map<String, String> addingParams) {
+			Set<String> ignoreParams, Map<String, String> addingParams,
+			boolean isURLEncode) {
 		if (req == null) {
 			return null;
 		}
-		return editQueryString(req.getQueryString(), ignoreParams, addingParams);
+		return editQueryString(req.getQueryString(), ignoreParams, addingParams, isURLEncode);
 	}
 
 	/**
@@ -144,12 +158,15 @@ public class UrlUtil {
 	 * @param queryString クエリ文字列
 	 * @param ignoreParams QueryStringから除去するキーリスト
 	 * @param addingParams QueryStringに加えるキーと値のリスト
+	 * @param isURLEncode QueryStringの値をURLエンコードする場合true
 	 */
 	public static String editQueryString(String queryString,
-			Set<String> ignoreParams, Map<String, String> addingParams) {
+			Set<String> ignoreParams, Map<String, String> addingParams,
+			boolean isURLEncode) {
 		boolean isFirst = true;
 		StringBuilder sb = new StringBuilder();
 		if (!StringUtils.isBlank(queryString)) {
+			/*
 			if (ignoreParams == null || ignoreParams.isEmpty()) {
 				if (queryString != null) {
 					sb.append("?");
@@ -157,6 +174,7 @@ public class UrlUtil {
 					isFirst = false;
 				}
 			} else {
+			*/
 				String[] queryStringParts = null;
 				if (!StringUtils.isBlank(queryString)) {
 					queryStringParts = queryString.split("&");
@@ -170,22 +188,22 @@ public class UrlUtil {
 						} else {
 							name = queryStringPart;
 						}
-						if (!ignoreParams.contains(name)) {
+						if (ignoreParams == null || !ignoreParams.contains(name)) {
 							if (isFirst) {
 								sb.append("?");
 								isFirst = false;
 							} else {
 								sb.append("&");
 							}
-							sb.append(name);
+							sb.append(urlEncode(name, isURLEncode));
 							if (value != null) {
 								sb.append("=");
-								sb.append(value);
+								sb.append(urlEncode(value, isURLEncode));
 							}
 						}
 					}
 				}
-			}
+			//}
 		}
 
 		if (addingParams != null && !addingParams.isEmpty()) {
@@ -198,10 +216,10 @@ public class UrlUtil {
 				} else {
 					sb.append("&");
 				}
-				sb.append(key);
+				sb.append(urlEncode(key, isURLEncode));
 				if (!StringUtils.isBlank(value)) {
 					sb.append("=");
-					sb.append(value);
+					sb.append(urlEncode(value, isURLEncode));
 				}
 			}
 		}
@@ -344,6 +362,20 @@ public class UrlUtil {
 			logger.warn("[urlEncode] UnsupportedEncodingException: " + e.getMessage());
 		}
 		return str;	// そのまま返す
+	}
+
+	/**
+	 * URLエンコード指定がある場合、URLエンコードを行い返却する.
+	 * @param value 値
+	 * @param isURIEncode URLエンコードを行う場合true
+	 * @return 編集した値
+	 */
+	private static String urlEncode(String value, boolean isURIEncode) {
+		if (isURIEncode) {
+			return urlEncode(value);
+		} else {
+			return value;
+		}
 	}
 
 }
