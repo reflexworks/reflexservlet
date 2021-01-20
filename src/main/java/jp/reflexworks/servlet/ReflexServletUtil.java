@@ -43,9 +43,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 	/** Reqest Header : X-Requested-With */
 	private static final String X_REQUESTED_WITH_LOWER =
 			X_REQUESTED_WITH.toLowerCase(Locale.ENGLISH);
-	/** Response header value : Cache-Control value */
-	private static final String CACHE_CONTROL_VALUE = NO_CACHE + ", " + NO_STORE
-			+ ", " + MUST_REVALIDATE;
 
 	/** ロガー */
 	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
