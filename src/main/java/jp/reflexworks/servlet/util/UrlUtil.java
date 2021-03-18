@@ -138,6 +138,36 @@ public class UrlUtil {
 	}
 
 	/**
+	 * リクエストパラメータを編集し、PathInfoとQueryString文字列を作成します.
+	 * @param pathInfoQuery PathInfoとQueryString
+	 * @param ignoreParams 除去するパラメータ
+	 * @param addingParams 追加するパラメータ
+	 * @param isURLEncode QueryStringの値をURLエンコードする場合true
+	 * @return PathInfoとQueryString文字列
+	 */
+	public static String editPathInfoQuery(String pathInfoQuery,
+			Set<String> ignoreParams, Map<String, String> addingParams,
+			boolean isURLEncode) {
+		// pathInfoとQueryStringに分ける
+		String pathInfo = "";
+		String tmpQueryString = "";
+		if (pathInfoQuery != null) {
+			int idx = pathInfoQuery.indexOf("?");
+			if (idx > -1) {
+				pathInfo = pathInfoQuery.substring(0, idx);
+				tmpQueryString = pathInfoQuery.substring(idx + 1);
+			} else {
+				pathInfo = pathInfoQuery;
+			}
+		}
+
+		StringBuilder sb = new StringBuilder();
+		sb.append(pathInfo);
+		sb.append(editQueryString(tmpQueryString, ignoreParams, addingParams, isURLEncode));
+		return sb.toString();
+	}
+
+	/**
 	 * QueryStringを組み立てます.
 	 * @param req リクエスト
 	 * @param ignoreParams QueryStringから除去するキーリスト
@@ -166,44 +196,34 @@ public class UrlUtil {
 		boolean isFirst = true;
 		StringBuilder sb = new StringBuilder();
 		if (!StringUtils.isBlank(queryString)) {
-			/*
-			if (ignoreParams == null || ignoreParams.isEmpty()) {
-				if (queryString != null) {
-					sb.append("?");
-					sb.append(queryString);
-					isFirst = false;
-				}
-			} else {
-			*/
-				String[] queryStringParts = null;
-				if (!StringUtils.isBlank(queryString)) {
-					queryStringParts = queryString.split("&");
-					for (String queryStringPart : queryStringParts) {
-						int idx = queryStringPart.indexOf("=");
-						String name = null;
-						String value = null;
-						if (idx > 0) {
-							name = queryStringPart.substring(0, idx);
-							value = queryStringPart.substring(idx + 1);
+			String[] queryStringParts = null;
+			if (!StringUtils.isBlank(queryString)) {
+				queryStringParts = queryString.split("&");
+				for (String queryStringPart : queryStringParts) {
+					int idx = queryStringPart.indexOf("=");
+					String name = null;
+					String value = null;
+					if (idx > 0) {
+						name = queryStringPart.substring(0, idx);
+						value = queryStringPart.substring(idx + 1);
+					} else {
+						name = queryStringPart;
+					}
+					if (ignoreParams == null || !ignoreParams.contains(name)) {
+						if (isFirst) {
+							sb.append("?");
+							isFirst = false;
 						} else {
-							name = queryStringPart;
+							sb.append("&");
 						}
-						if (ignoreParams == null || !ignoreParams.contains(name)) {
-							if (isFirst) {
-								sb.append("?");
-								isFirst = false;
-							} else {
-								sb.append("&");
-							}
-							sb.append(urlEncode(name, isURLEncode));
-							if (value != null) {
-								sb.append("=");
-								sb.append(urlEncode(value, isURLEncode));
-							}
+						sb.append(urlEncode(name, isURLEncode));
+						if (value != null) {
+							sb.append("=");
+							sb.append(urlEncode(value, isURLEncode));
 						}
 					}
 				}
-			//}
+			}
 		}
 
 		if (addingParams != null && !addingParams.isEmpty()) {

@@ -116,7 +116,7 @@ public class UrlUtilTest {
 		editQueryString = UrlUtil.editQueryString(queryString, ignoreParams, addingParams, true);
 		System.out.println("queryString = " + queryString + " , edited = " + editQueryString);
 
-		System.out.println("--- UrlUtilTest (2) start ---");
+		System.out.println("--- UrlUtilTest (2) end ---");
 
 	}
 
@@ -173,6 +173,63 @@ public class UrlUtilTest {
 		assertEquals(hostWithoutPort, "localhost");
 
 		System.out.println("--- testGetHost end ---");
+	}
+
+	/**
+	 * テスト
+	 */
+	@Test
+	public void testEditQuery() {
+
+		System.out.println("--- UrlUtilTest (testEditQuery) start ---");
+
+		Set<String> ignoreParams = new HashSet<>();
+		ignoreParams.add("s");
+
+		String pathInfoQuery = "/今日のnews?article.text-ft-天気&s=date";
+		System.out.println("before = " + pathInfoQuery);
+		String result = UrlUtil.editPathInfoQuery(pathInfoQuery, ignoreParams, null, false);
+		System.out.println(" after = " + result);
+		System.out.println("------");
+
+		pathInfoQuery = "/昨日ののnews?s=date";
+		System.out.println("before = " + pathInfoQuery);
+		result = UrlUtil.editPathInfoQuery(pathInfoQuery, ignoreParams, null, false);
+		System.out.println(" after = " + result);
+		System.out.println("------");
+
+		pathInfoQuery = "?article.text-ft-天気&s=date";
+		System.out.println("before = " + pathInfoQuery);
+		result = UrlUtil.editPathInfoQuery(pathInfoQuery, ignoreParams, null, false);
+		System.out.println(" after = " + result);
+		System.out.println("------");
+
+		pathInfoQuery = "?article.text-ft-天気&s=date&article.tag-eq-晴れ";
+		System.out.println("before = " + pathInfoQuery);
+		result = UrlUtil.editPathInfoQuery(pathInfoQuery, ignoreParams, null, false);
+		System.out.println(" after = " + result);
+		System.out.println("------");
+
+		pathInfoQuery = "?s=date";
+		System.out.println("before = " + pathInfoQuery);
+		result = UrlUtil.editPathInfoQuery(pathInfoQuery, ignoreParams, null, false);
+		System.out.println(" after = " + result);
+		System.out.println("------");
+
+		pathInfoQuery = "/昨日ののnews";
+		System.out.println("before = " + pathInfoQuery);
+		result = UrlUtil.editPathInfoQuery(pathInfoQuery, ignoreParams, null, false);
+		System.out.println(" after = " + result);
+		System.out.println("------");
+
+		pathInfoQuery = null;
+		System.out.println("before = " + pathInfoQuery);
+		result = UrlUtil.editPathInfoQuery(pathInfoQuery, ignoreParams, null, false);
+		System.out.println(" after = " + result);
+		System.out.println("------");
+
+		System.out.println("--- UrlUtilTest (testEditQuery) end ---");
+
 	}
 
 }
