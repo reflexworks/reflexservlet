@@ -473,19 +473,16 @@ public class TestRequest implements HttpServletRequest {
 		this.pathInfo = pathInfo;
 	}
 
-	@Override
 	public long getContentLengthLong() {
 		// TODO 自動生成されたメソッド・スタブ
 		return 0;
 	}
 
-	@Override
 	public String changeSessionId() {
 		// TODO 自動生成されたメソッド・スタブ
 		return null;
 	}
 
-	@Override
 	public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
 		// TODO 自動生成されたメソッド・スタブ
 		return null;
