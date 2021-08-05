@@ -1,6 +1,7 @@
 package jp.reflexworks.servlet.util;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.Locale;
 import java.util.Map;
@@ -380,6 +381,23 @@ public class UrlUtil {
 			return URLEncoder.encode(str, ReflexServletConst.ENCODING);
 		} catch (UnsupportedEncodingException e) {
 			logger.warn("[urlEncode] UnsupportedEncodingException: " + e.getMessage());
+		}
+		return str;	// そのまま返す
+	}
+
+	/**
+	 * URLデコード
+	 * @param str 文字列
+	 * @return URLデコードした文字列
+	 */
+	public static String urlDecode(String str) {
+		if (StringUtils.isBlank(str)) {
+			return str;
+		}
+		try {
+			return URLDecoder.decode(str, ReflexServletConst.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			logger.warn("[urlDecode] UnsupportedEncodingException: " + e.getMessage());
 		}
 		return str;	// そのまま返す
 	}
