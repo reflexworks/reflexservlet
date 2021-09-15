@@ -90,7 +90,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				result = rxmapper.fromMessagePack(inputStream);
 			} finally {
-				inputStream.close();
+				try {
+					inputStream.close();
+				} catch (Exception re) {
+					logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
+				}
 			}
 			return result;
 		}
@@ -124,7 +128,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				reader.close();
 			} catch (Exception re) {
-				logger.log(Level.WARNING, re.getClass().getName(), re);
+				logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
 			}
 		}
 
@@ -188,7 +192,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 
 		} finally {
 			if (in != null) {
-				in.close();
+				try {
+					in.close();
+				} catch (Exception re) {
+					logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
+				}
 			}
 		}
 		return result;
@@ -213,7 +221,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				reader.close();
 			} catch (Exception re) {
-				logger.log(Level.WARNING, re.getClass().getName(), re);
+				logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
 			}
 		}
 
@@ -364,8 +372,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 			} finally {
 				try {
 					out.close();
-				} catch (IOException e) {
-					logger.log(Level.WARNING, e.getClass().getName(), e);
+				} catch (Exception e) {
+					logger.log(Level.WARNING, "[close error] " + e.getClass().getName(), e);
 				}
 			}
 
@@ -418,7 +426,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 					try {
 						prtout.close();
 					} catch (Exception e) {
-						logger.log(Level.WARNING, e.getClass().getName(), e);
+						logger.log(Level.WARNING, "[close error] " + e.getClass().getName(), e);
 					}
 				}
 			}
@@ -570,10 +578,13 @@ public class ReflexServletUtil implements ReflexServletConst {
 		prtout.print(NEWLINE);
 		prtout.print("</html>");
 
-
-		prtout.flush();
-		out.flush();
-		out.close();
+		try {
+			prtout.flush();
+			out.flush();
+			out.close();
+		} catch (Exception re) {
+			logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
+		}
 	}
 
 	/**
@@ -632,7 +643,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				in.close();
 			} catch (Exception e) {
-				logger.log(Level.WARNING, e.getClass().getName(), e);
+				logger.log(Level.WARNING, "[close error] " + e.getClass().getName(), e);
 			}
 		}
 	}
@@ -671,7 +682,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				out.close();
 			} catch (Exception e) {
-				logger.log(Level.WARNING, e.getClass().getName(), e);
+				logger.log(Level.WARNING, "[close error] " + e.getClass().getName(), e);
 			}
 		}
 	}
