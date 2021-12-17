@@ -416,4 +416,76 @@ public class UrlUtil {
 		}
 	}
 
+	/**
+	 * PathInfo + QueryString文字列をURLエンコードする.
+	 * PathInfoの/、QueryStringの?,&,=はエンコードせず、その他の値をエンコードする。
+	 * @param pathInfoQuery PathInfo + QueryString
+	 * @return URLエンコードしたPathInfo + QueryString
+	 */
+	public static String urlEncodePathInfoQuery(String pathInfoQuery) {
+		if (StringUtils.isBlank(pathInfoQuery)) {
+			return pathInfoQuery;
+		}
+		// まずはPathInfoとQueryStringを分割
+		int len = pathInfoQuery.length();
+		int idxPathInfoEnd = pathInfoQuery.indexOf("?");
+		if (idxPathInfoEnd == -1) {
+			idxPathInfoEnd = len;
+		}
+		String pathInfo = pathInfoQuery.substring(0, idxPathInfoEnd);
+		String queryString = null;
+		int idxPathInfoEnd1 = idxPathInfoEnd + 1;
+		if (len > idxPathInfoEnd1) {
+			queryString = pathInfoQuery.substring(idxPathInfoEnd1);
+		}
+
+		StringBuilder sb = new StringBuilder();
+		if (!StringUtils.isBlank(pathInfo)) {
+			// PathInfoをURLエンコード
+			// PathInfoが"/"のみの場合、そのままとする。
+			if ("/".equals(pathInfo)) {
+				sb.append(pathInfo);
+			} else {
+				String[] pathInfoParts = pathInfo.split("\\/");
+				boolean isFirst = true;
+				for (String pathInfoPart : pathInfoParts) {
+					if (isFirst) {
+						isFirst = false;
+					} else {
+						sb.append("/");
+					}
+					sb.append(urlEncode(pathInfoPart));
+				}
+			}
+		}
+		if (!StringUtils.isBlank(queryString)) {
+			sb.append("?");
+			// QueryStringをURLエンコード
+			String[] paramParts = queryString.split("&");
+			boolean isFirst = true;
+			for (String paramPart : paramParts) {
+				if (isFirst) {
+					isFirst = false;
+				} else {
+					sb.append("&");
+				}
+				int idx = paramPart.indexOf("=");
+				String key = null;
+				String val = null;
+				if (idx == -1) {
+					key = paramPart;
+				} else {
+					key = paramPart.substring(0, idx);
+					val = paramPart.substring(idx + 1);
+				}
+				sb.append(urlEncode(key));
+				if (!StringUtils.isBlank(val)) {
+					sb.append("=");
+					sb.append(urlEncode(val));
+				}
+			}
+		}
+		return sb.toString();
+	}
+
 }

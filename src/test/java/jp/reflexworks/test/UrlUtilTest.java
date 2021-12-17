@@ -232,4 +232,67 @@ public class UrlUtilTest {
 
 	}
 
+	/**
+	 * テスト
+	 */
+	@Test
+	public void testUrlEncodePathInfoQuery() {
+		System.out.println("--- testUrlEncodePathInfoQuery start ---");
+
+		String requestUri = "/天気予報news?s=article.is_publish_noindex&article.text1-rg-[^東]+&l=100";
+		String urlEncodeUri = UrlUtil.urlEncodePathInfoQuery(requestUri);
+		System.out.println("***");
+		System.out.println("  requestUri = " + requestUri);
+		System.out.println("urlEncodeUri = " + urlEncodeUri);
+		assertEquals(requestUri, UrlUtil.urlDecode(urlEncodeUri));
+
+		requestUri = null;
+		urlEncodeUri = UrlUtil.urlEncodePathInfoQuery(requestUri);
+		System.out.println("***");
+		System.out.println("  requestUri = " + requestUri);
+		System.out.println("urlEncodeUri = " + urlEncodeUri);
+		assertEquals(requestUri, UrlUtil.urlDecode(urlEncodeUri));
+
+		requestUri = "";
+		urlEncodeUri = UrlUtil.urlEncodePathInfoQuery(requestUri);
+		System.out.println("***");
+		System.out.println("  requestUri = " + requestUri);
+		System.out.println("urlEncodeUri = " + urlEncodeUri);
+		assertEquals(requestUri, UrlUtil.urlDecode(urlEncodeUri));
+
+		requestUri = "/あいうえお/かきくけこ";
+		urlEncodeUri = UrlUtil.urlEncodePathInfoQuery(requestUri);
+		System.out.println("***");
+		System.out.println("  requestUri = " + requestUri);
+		System.out.println("urlEncodeUri = " + urlEncodeUri);
+		assertEquals(requestUri, UrlUtil.urlDecode(urlEncodeUri));
+
+		requestUri = "?one&two=二";
+		urlEncodeUri = UrlUtil.urlEncodePathInfoQuery(requestUri);
+		System.out.println("***");
+		System.out.println("  requestUri = " + requestUri);
+		System.out.println("urlEncodeUri = " + urlEncodeUri);
+		assertEquals(requestUri, UrlUtil.urlDecode(urlEncodeUri));
+
+		requestUri = "/?aaa=&";
+		urlEncodeUri = UrlUtil.urlEncodePathInfoQuery(requestUri);
+		System.out.println("***");
+		System.out.println("  requestUri = " + requestUri);
+		System.out.println("urlEncodeUri = " + urlEncodeUri);
+		// このURLEncodeの結果は末尾の=&が除去される。
+		assertEquals(requestUri.substring(0, requestUri.length() - 2), UrlUtil.urlDecode(urlEncodeUri));
+
+		requestUri = "/_plus+?bbb=";
+		urlEncodeUri = UrlUtil.urlEncodePathInfoQuery(requestUri);
+		System.out.println("***");
+		System.out.println("  requestUri = " + requestUri);
+		System.out.println("urlEncodeUri = " + urlEncodeUri);
+		// このURLEncodeの結果は末尾の=が除去される。
+		assertEquals(requestUri.substring(0, requestUri.length() - 1), UrlUtil.urlDecode(urlEncodeUri));
+
+		System.out.println("--- testUrlEncodePathInfoQuery end ---");
+	}
+
+
+
 }
