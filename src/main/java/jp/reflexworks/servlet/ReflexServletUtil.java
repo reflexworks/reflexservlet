@@ -9,24 +9,22 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.Locale;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.Enumeration;
 import java.util.zip.GZIPOutputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import jp.sourceforge.reflex.IResourceMapper;
-import jp.sourceforge.reflex.core.ResourceMapper;
-import jp.sourceforge.reflex.exception.JSONException;
-import jp.sourceforge.reflex.util.FileUtil;
-import jp.sourceforge.reflex.util.StringUtils;
-import jp.sourceforge.reflex.util.DeflateUtil;
 import jp.reflexworks.servlet.exception.InvokeException;
 import jp.reflexworks.servlet.util.HeaderUtil;
+import jp.sourceforge.reflex.IResourceMapper;
+import jp.sourceforge.reflex.exception.JSONException;
+import jp.sourceforge.reflex.util.DeflateUtil;
+import jp.sourceforge.reflex.util.FileUtil;
+import jp.sourceforge.reflex.util.StringUtils;
 
 /**
  * Reflex サーブレットユーティリティ.
@@ -46,30 +44,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 
 	/** ロガー */
 	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
-
-	/**
-	 * リクエストデータ取得
-	 * @param req HttpServletRequest
-	 * @param model_package modelのパッケージ
-	 * @return POSTデータをオブジェクトに変換したもの
-	 */
-	public static Object getEntity(HttpServletRequest req, String model_package)
-	throws IOException, JSONException, ClassNotFoundException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return getEntity(req, rxmapper);
-	}
-
-	/**
-	 * リクエストデータ取得
-	 * @param req HttpServletRequest
-	 * @param model_package modelのパッケージ
-	 * @return POSTデータをオブジェクトに変換したもの
-	 */
-	public static Object getEntity(HttpServletRequest req, Map<String, String> model_package)
-	throws IOException, JSONException, ClassNotFoundException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return getEntity(req, rxmapper);
-	}
 
 	/**
 	 * リクエストデータ取得
@@ -161,7 +135,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 			}
 			if (!changeObj) {
 				if (body.length() > 0) {
-					//if (contenttype.toLowerCase().indexOf("javascript") >= 0) {
 					char firstChar = body.charAt(0);
 					if (firstChar == '{' && useJson) {
 						result = rxmapper.fromJSON(body);
@@ -172,33 +145,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 			}
 		}
 
-		return result;
-	}
-
-	/**
-	 * リクエストデータ取得
-	 * ストリームから直接XMLを読み取り、オブジェクトに変換します
-	 * @param req HttpServletRequest
-	 * @param rxmapper ResourceMapper
-	 * @return POSTデータをオブジェクトに変換したもの
-	 */
-	public static Object getXmlEntity(HttpServletRequest req, IResourceMapper rxmapper)
-	throws IOException, JSONException {
-		BufferedReader in = null;
-		Object result = null;
-		try {
-			in = new BufferedReader(new InputStreamReader(req.getInputStream()));
-			result = rxmapper.fromXML(in);
-
-		} finally {
-			if (in != null) {
-				try {
-					in.close();
-				} catch (Exception re) {
-					logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
-				}
-			}
-		}
 		return result;
 	}
 
@@ -497,10 +443,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 		prtout.print(REFLEX_LOGOS);
 		prtout.print("\"></img></a></p>");
 
-/*
-		prtout.print("<p align=\"center\"><font size=\"6\"><b>Error Report");
-		prtout.print("</b></font></p>");
-*/
 		prtout.print("<hr/>");
 
 		prtout.print("<font size=\"5\">");
@@ -559,10 +501,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 		prtout.print("<hr/>");
 		prtout.print(NEWLINE);
 
-/*		prtout.print("<a href=\"http://www.virtual-tech.net/\"><img src=\"");
-		prtout.print(REFLEX_LOGOS);
-		prtout.print("\"></img></a>");
-*/
 		prtout.print("<font size=\"5\">");
 		prtout.print("<SPAN style='Arial;font-size:38%;vertical;color:#B2B2B2'>");
 		prtout.print("<b>");
@@ -700,9 +638,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 				acceptedEncodings = req.getHeader(HEADER_ACCEPT_ENCODING_LOWERCASE);
 			}
 			return HeaderUtil.containsHeader(acceptedEncodings, HEADER_VALUE_GZIP);
-			//if (acceptedEncodings != null && acceptedEncodings.indexOf("gzip") != -1) {
-			//	ret = true;
-			//}
 		}
 		return ret;
 	}
