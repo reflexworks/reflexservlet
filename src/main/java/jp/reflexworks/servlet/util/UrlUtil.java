@@ -7,11 +7,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jp.reflexworks.servlet.ReflexServletConst;
 import jp.sourceforge.reflex.util.StringUtils;
 

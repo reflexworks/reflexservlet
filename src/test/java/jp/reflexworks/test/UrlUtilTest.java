@@ -1,16 +1,16 @@
 package jp.reflexworks.test;
 
+import static org.junit.Assert.*;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.Part;
-
-import static org.junit.Assert.*;
 import org.junit.Test;
 
+import jakarta.servlet.http.Part;
 import jp.reflexworks.servlet.util.HeaderUtil;
 import jp.reflexworks.servlet.util.UrlUtil;
 import jp.reflexworks.test.servlet.TestRequest;

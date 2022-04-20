@@ -2,8 +2,7 @@ package jp.reflexworks.servlet.util;
 
 import java.util.Locale;
 
-import javax.servlet.http.Part;
-
+import jakarta.servlet.http.Part;
 import jp.reflexworks.servlet.ReflexServletConst;
 
 /**

@@ -4,18 +4,17 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.Map;
-import java.util.List;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.codec.binary.Base64;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jp.sourceforge.reflex.util.DateUtil;
 import jp.sourceforge.reflex.util.SHA1;
 import jp.sourceforge.reflex.util.SHA256;

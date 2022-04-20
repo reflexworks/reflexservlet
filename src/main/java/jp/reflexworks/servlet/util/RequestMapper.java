@@ -4,8 +4,7 @@ import java.lang.reflect.Field;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.servlet.http.HttpServletRequest;
-
+import jakarta.servlet.http.HttpServletRequest;
 import jp.sourceforge.reflex.util.FieldMapper;
 
 public class RequestMapper extends FieldMapper {

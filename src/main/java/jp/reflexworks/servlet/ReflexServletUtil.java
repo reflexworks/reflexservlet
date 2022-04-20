@@ -15,9 +15,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jp.reflexworks.servlet.exception.InvokeException;
 import jp.reflexworks.servlet.util.HeaderUtil;
 import jp.sourceforge.reflex.IResourceMapper;
