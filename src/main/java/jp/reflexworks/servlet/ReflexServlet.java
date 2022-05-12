@@ -21,7 +21,6 @@ import jp.sourceforge.reflex.util.DeflateUtil;
  * </ul>
  * </p>
  */
-@SuppressWarnings("serial")
 public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 
 	/**
