@@ -28,6 +28,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpUpgradeHandler;
 import jakarta.servlet.http.Part;
+import jp.reflexworks.servlet.ReflexServletConst;
 import jp.reflexworks.servlet.util.EnumerationConverter;
 import jp.sourceforge.reflex.util.StringUtils;
 
@@ -48,6 +49,9 @@ public class TestRequest implements HttpServletRequest {
 	private Map<String, String[]> parameters = new HashMap<String, String[]>();
 	/** header */
 	private Map<String, List<String>> headers = new HashMap<String, List<String>>();
+	/** cookie */
+	private Cookie[] cookies;
+	/** method */
 	private String method;
 	/** pathInfo */
 	private String pathInfo;
@@ -110,11 +114,40 @@ public class TestRequest implements HttpServletRequest {
 		}
 		// header
 		if (pHeaders != null) {
+			List<Cookie> tmpCookieList = new ArrayList<>();
 			for (Map.Entry<String, String> mapEntry : pHeaders.entrySet()) {
 				String hKey = mapEntry.getKey();
 				List<String> hVal = new ArrayList<String>();
 				hVal.add(mapEntry.getValue());
 				headers.put(hKey, hVal);
+				if (ReflexServletConst.HEADER_COOKIE.equals(hKey)) {
+					if (hVal != null && !hVal.isEmpty()) {
+						for (String tmpVal : hVal) {
+							if (StringUtils.isBlank(tmpVal)) {
+								continue;
+							}
+							String[] tmpParts = tmpVal.split(";");
+							for (String tmpPart : tmpParts) {
+								String cookieName = null;
+								String cookieVal = null;
+								String part = StringUtils.trim(tmpPart);
+								int idx = part.indexOf("=");
+								if (idx == -1) {
+									cookieName = part;
+								} else {
+									cookieName = part.substring(0, idx);
+									cookieVal = part.substring(idx + 1);
+								}
+								Cookie cookie = new Cookie(cookieName, cookieVal);
+								tmpCookieList.add(cookie);
+							}
+							
+						}
+					}
+				}
+			}
+			if (!tmpCookieList.isEmpty()) {
+				this.cookies = tmpCookieList.toArray(new Cookie[0]);
 			}
 		}
 		// payload
@@ -302,8 +335,7 @@ public class TestRequest implements HttpServletRequest {
 	}
 
 	public Cookie[] getCookies() {
-		// TODO 自動生成されたメソッド・スタブ
-		return null;
+		return cookies;
 	}
 
 	public long getDateHeader(String name) {
