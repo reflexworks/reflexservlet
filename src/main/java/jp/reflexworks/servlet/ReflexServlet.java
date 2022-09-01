@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.exception.JSONException;
+import jp.sourceforge.reflex.exception.ReflexXMLException;
 import jp.sourceforge.reflex.util.DeflateUtil;
 
 /**
@@ -34,7 +35,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
-	throws IOException, JSONException, ClassNotFoundException {
+	throws IOException, JSONException, ReflexXMLException, ClassNotFoundException {
 		return ReflexServletUtil.getEntity(body, rxmapper, useJson);
 	}
 

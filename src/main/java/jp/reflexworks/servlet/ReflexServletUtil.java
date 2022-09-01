@@ -21,6 +21,7 @@ import jp.reflexworks.servlet.exception.InvokeException;
 import jp.reflexworks.servlet.util.HeaderUtil;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.exception.JSONException;
+import jp.sourceforge.reflex.exception.ReflexXMLException;
 import jp.sourceforge.reflex.util.DeflateUtil;
 import jp.sourceforge.reflex.util.FileUtil;
 import jp.sourceforge.reflex.util.StringUtils;
@@ -51,7 +52,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public static Object getEntity(HttpServletRequest req, IResourceMapper rxmapper)
-	throws IOException, JSONException, ClassNotFoundException {
+	throws IOException, JSONException, ReflexXMLException, ClassNotFoundException {
 		// リクエストデータ受信
 		InputStream inputStream = req.getInputStream();
 		Object result = null;
@@ -116,7 +117,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
 	public static Object getEntity(String body, IResourceMapper rxmapper, boolean useJson)
-	throws IOException, JSONException, ClassNotFoundException {
+	throws IOException, JSONException, ReflexXMLException, ClassNotFoundException {
 		Object result = null;
 		boolean changeObj = false;
 
@@ -362,7 +363,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 					// XML
 					if (entities != null) {
 						prtout.print(XMLHEAD);
-						rxmapper.toXML(entities, prtout, isStrict);
+						rxmapper.toXML(entities, prtout);
 					}
 				}
 
