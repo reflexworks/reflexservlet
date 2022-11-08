@@ -248,7 +248,6 @@ public class WsseUtil extends AuthTokenUtil {
 		}
 		List<String> rxids = headers.get(HEADER_AUTHORIZATION);
 		if (rxids != null && !rxids.isEmpty()) {
-			//String rxid = rxids.get(0);
 			String rxid = getRXIDValue(rxids);
 			return extractRXID(rxid);
 		}
@@ -308,10 +307,10 @@ public class WsseUtil extends AuthTokenUtil {
 		return null;
 	}
 	
-	private String getRXIDValue(Enumeration values) {
+	private String getRXIDValue(Enumeration<String> values) {
 		if (values != null) {
 			while (values.hasMoreElements()) {
-				String value = (String)values.nextElement();
+				String value = values.nextElement();
 				String tmp = getRXIDValue(value);
 				if (tmp != null) {
 					return tmp;

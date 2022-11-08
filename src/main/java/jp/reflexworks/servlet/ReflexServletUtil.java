@@ -819,7 +819,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req リクエスト
 	 * @param key リクエストヘッダのキー
 	 * @param valuePrefix リクエストヘッダの値の先頭文字列
-	 * @return リクエストヘッダのうち、指定されたキー・先頭文字列に合致した値。
+	 * @return リクエストヘッダのうち、指定されたキー・先頭文字列に合致した値から、先頭文字列を除去した値。
 	 *         複数存在する場合は最初の1件を返却します。
 	 */
 	public static String getHeaderValue(HttpServletRequest req,
@@ -832,8 +832,12 @@ public class ReflexServletUtil implements ReflexServletConst {
 		if (enu != null) {
 			while (enu.hasMoreElements()) {
 				String value = enu.nextElement();
-				if (value != null && value.startsWith(valuePrefix)) {
-					return value;
+				if (value != null) {
+					if ("".equals(valuePrefix)) {
+						return value;
+					} else if (value.startsWith(valuePrefix)) {
+						return value.substring(valuePrefix.length());
+					}
 				}
 			}
 		}
