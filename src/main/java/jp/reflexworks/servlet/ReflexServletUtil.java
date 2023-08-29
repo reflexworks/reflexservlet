@@ -38,9 +38,10 @@ import jp.sourceforge.reflex.util.StringUtils;
  */
 public class ReflexServletUtil implements ReflexServletConst {
 
-	/** Reqest Header : X-Requested-With */
-	private static final String X_REQUESTED_WITH_LOWER =
-			X_REQUESTED_WITH.toLowerCase(Locale.ENGLISH);
+	/** Request Header Prefix : X- */
+	private static final String HEADER_X_PREFIX = "X-";
+	/** Request Header Prefix : x- */
+	private static final String HEADER_X_LOWER_PREFIX = HEADER_X_PREFIX.toLowerCase(Locale.ENGLISH);
 
 	/** ロガー */
 	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
@@ -781,35 +782,23 @@ public class ReflexServletUtil implements ReflexServletConst {
 	}
 
 	/**
-	 * X-Requested-WithヘッダがXMLHttpRequestとなっているかどうかチェックする.
-	 * @param req リクエスト
-	 * @return X-Requested-WithヘッダがXMLHttpRequestとなっている場合true
-	 */
-	public static boolean isXMLHttpRequest(HttpServletRequest req) {
-		if (req != null) {
-			String requestedWith = req.getHeader(X_REQUESTED_WITH);
-			if (requestedWith == null) {
-				requestedWith = req.getHeader(X_REQUESTED_WITH_LOWER);
-			}
-			if (X_REQUESTED_WITH_WHR.equals(requestedWith)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * X-Requested-Withヘッダに値が設定されているかどうかチェックする.
 	 * @param req リクエスト
 	 * @return X-Requested-Withヘッダに値が設定されている場合true
 	 */
 	public static boolean hasXRequestedWith(HttpServletRequest req) {
 		if (req != null) {
-			String requestedWith = req.getHeader(X_REQUESTED_WITH);
-			if (requestedWith == null) {
-				requestedWith = req.getHeader(X_REQUESTED_WITH_LOWER);
+			// `X-`または`x-`で始まるヘッダの指定があればOK
+			Enumeration<String> enu = req.getHeaderNames();
+			while (enu.hasMoreElements()) {
+				String name = enu.nextElement();
+				if (name.startsWith(HEADER_X_PREFIX) ||
+						name.startsWith(HEADER_X_LOWER_PREFIX)) {
+					if (!StringUtils.isBlank(req.getHeader(name))) {
+						return true;
+					}
+				}
 			}
-			return !StringUtils.isBlank(requestedWith);
 		}
 		return false;
 	}
