@@ -5,7 +5,7 @@
   <groupId>jp.reflexworks</groupId>
   <artifactId>reflexservlet</artifactId>
   <packaging>jar</packaging>
-  <version>8.2.0</version>
+  <version>8.2.1</version>
 
   <description>Reflex Servlet</description>
   <name>Reflex Servlet</name>
@@ -17,6 +17,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <reflexcoreVersion>8.2.1</reflexcoreVersion>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
   </properties>
@@ -25,7 +26,7 @@
     <dependency>
       <groupId>jp.reflexworks</groupId>
       <artifactId>reflexcore</artifactId>
-      <version>8.2.0</version>
+      <version>${reflexcoreVersion}</version>
     </dependency>
     <!-- Jetty 11は jakarta servlet 5.0 -->
     <dependency>
