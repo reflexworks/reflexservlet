@@ -805,6 +805,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 
 	/**
 	 * リクエストヘッダから指定されたキーの値のうち、先頭が指定された文字列と等しい値を返却します。
+	 * 同じヘッダ名で複数の値が設定されている場合、Enumerationでなくカンマ区切り(", ")の場合にも対応。
 	 * @param req リクエスト
 	 * @param key リクエストヘッダのキー
 	 * @param valuePrefix リクエストヘッダの値の先頭文字列
@@ -824,8 +825,14 @@ public class ReflexServletUtil implements ReflexServletConst {
 				if (value != null) {
 					if ("".equals(valuePrefix)) {
 						return value;
-					} else if (value.startsWith(valuePrefix)) {
-						return value.substring(valuePrefix.length());
+					} else {
+						// 同じヘッダ名で複数の値が設定されている場合で、Enumerationでなくカンマ区切り(", ")の場合に対応。
+						String[] valueParts = value.split(", ");
+						for (String valuePart : valueParts) {
+							if (valuePart.startsWith(valuePrefix)) {
+								return valuePart.substring(valuePrefix.length());
+							}
+						}
 					}
 				}
 			}
