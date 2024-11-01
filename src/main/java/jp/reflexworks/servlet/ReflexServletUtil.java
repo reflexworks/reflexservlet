@@ -42,7 +42,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 	private static final String HEADER_X_PREFIX = "X-";
 	/** Request Header Prefix : x- */
 	private static final String HEADER_X_LOWER_PREFIX = HEADER_X_PREFIX.toLowerCase(Locale.ENGLISH);
-
+	/** Request Header Prefix : x-forwarded */
+	private static final String HEADER_X_FORWARDED_LOWER_PREFIX = "x-forwarded";
+	/** Request Header Prefix : x-forwarded */
+	private static final String HEADER_AUTHORIZATION_LOWER = HEADER_AUTHORIZATION.toLowerCase(Locale.ENGLISH);
+	
 	/** ロガー */
 	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
 
@@ -788,12 +792,16 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 */
 	public static boolean hasXRequestedWith(HttpServletRequest req) {
 		if (req != null) {
-			// `X-`または`x-`で始まるヘッダの指定があればOK
+			// `X-`または`x-`で始まるヘッダの指定があればOK、ただし`x-forwarded`は除く。
+			// また`Authorization`ヘッダがあればOK。
+			// (2024.10.31)ブラウザからのURLリクエストで x-forwarded-for 等が送信されてくるので、x-だけでは判断できない。
 			Enumeration<String> enu = req.getHeaderNames();
 			while (enu.hasMoreElements()) {
 				String name = enu.nextElement();
-				if (name.startsWith(HEADER_X_PREFIX) ||
-						name.startsWith(HEADER_X_LOWER_PREFIX)) {
+				String nameLower = name.toLowerCase(Locale.ENGLISH);
+				if ((nameLower.startsWith(HEADER_X_LOWER_PREFIX) && 
+						!nameLower.startsWith(HEADER_X_FORWARDED_LOWER_PREFIX)) ||
+						nameLower.equals(HEADER_AUTHORIZATION_LOWER)) {
 					if (!StringUtils.isBlank(req.getHeader(name))) {
 						return true;
 					}
