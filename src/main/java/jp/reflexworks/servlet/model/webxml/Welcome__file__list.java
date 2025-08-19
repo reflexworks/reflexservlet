@@ -3,8 +3,6 @@ package jp.reflexworks.servlet.model.webxml;
 import java.io.Serializable;
 import java.util.List;
 
-import jp.reflexworks.servlet.model.webxml.Welcome__file;
-
 public class Welcome__file__list implements Serializable {
 
 	public List<Welcome__file> welcome__file;

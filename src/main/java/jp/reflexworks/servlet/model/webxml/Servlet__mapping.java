@@ -3,8 +3,6 @@ package jp.reflexworks.servlet.model.webxml;
 import java.io.Serializable;
 import java.util.List;
 
-import jp.reflexworks.servlet.model.webxml.Url__pattern;
-
 public class Servlet__mapping implements Serializable {
 
 	public String servlet__name;
