@@ -1,6 +1,7 @@
 package jp.reflexworks.servlet.util;
 
 import java.io.UnsupportedEncodingException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
@@ -44,8 +45,10 @@ public class MimeDecoder {
 						try {
 							ret = new String(Base64.decodeBase64(tmp2), format);
 						} catch (UnsupportedEncodingException e) {
-							logger.info("UnsupportedEncodingException: " + e.getMessage() +
-									", format: " + format);
+							if (logger.isLoggable(Level.INFO)) {
+								logger.info("UnsupportedEncodingException: " + e.getMessage() +
+										", format: " + format);
+							}
 						}
 					}
 				}

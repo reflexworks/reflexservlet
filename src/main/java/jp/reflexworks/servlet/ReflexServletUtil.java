@@ -9,22 +9,22 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.URL;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Enumeration;
+import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.zip.GZIPOutputStream;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import jp.sourceforge.reflex.IResourceMapper;
-import jp.sourceforge.reflex.core.ResourceMapper;
-import jp.sourceforge.reflex.exception.JSONException;
-import jp.sourceforge.reflex.util.FileUtil;
-import jp.sourceforge.reflex.util.StringUtils;
-import jp.sourceforge.reflex.util.DeflateUtil;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jp.reflexworks.servlet.exception.InvokeException;
 import jp.reflexworks.servlet.util.HeaderUtil;
+import jp.sourceforge.reflex.IResourceMapper;
+import jp.sourceforge.reflex.exception.JSONException;
+import jp.sourceforge.reflex.exception.XMLException;
+import jp.sourceforge.reflex.util.DeflateUtil;
+import jp.sourceforge.reflex.util.FileUtil;
+import jp.sourceforge.reflex.util.StringUtils;
 
 /**
  * Reflex サーブレットユーティリティ.
@@ -38,33 +38,17 @@ import jp.reflexworks.servlet.util.HeaderUtil;
  */
 public class ReflexServletUtil implements ReflexServletConst {
 
-	/** Reqest Header : X-Requested-With */
-	private static final String X_REQUESTED_WITH_LOWER = 
-			X_REQUESTED_WITH.toLowerCase(Locale.ENGLISH);
-
-	/**
-	 * リクエストデータ取得
-	 * @param req HttpServletRequest
-	 * @param model_package modelのパッケージ
-	 * @return POSTデータをオブジェクトに変換したもの
-	 */
-	public Object getEntity(HttpServletRequest req, String model_package) 
-	throws IOException, JSONException, ClassNotFoundException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return this.getEntity(req, rxmapper);
-	}
+	/** Request Header Prefix : X- */
+	private static final String HEADER_X_PREFIX = "X-";
+	/** Request Header Prefix : x- */
+	private static final String HEADER_X_LOWER_PREFIX = HEADER_X_PREFIX.toLowerCase(Locale.ENGLISH);
+	/** Request Header Prefix : x-forwarded */
+	private static final String HEADER_X_FORWARDED_LOWER_PREFIX = "x-forwarded";
+	/** Request Header Prefix : x-forwarded */
+	private static final String HEADER_AUTHORIZATION_LOWER = HEADER_AUTHORIZATION.toLowerCase(Locale.ENGLISH);
 	
-	/**
-	 * リクエストデータ取得
-	 * @param req HttpServletRequest
-	 * @param model_package modelのパッケージ
-	 * @return POSTデータをオブジェクトに変換したもの
-	 */
-	public Object getEntity(HttpServletRequest req, Map<String, String> model_package) 
-	throws IOException, JSONException, ClassNotFoundException {
-		IResourceMapper rxmapper = new ResourceMapper(model_package);
-		return this.getEntity(req, rxmapper);
-	}
+	/** ロガー */
+	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
 
 	/**
 	 * リクエストデータ取得
@@ -72,8 +56,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param rxmapper IResourceMapper
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
-	public Object getEntity(HttpServletRequest req, IResourceMapper rxmapper) 
-	throws IOException, JSONException, ClassNotFoundException {
+	public static Object getEntity(HttpServletRequest req, IResourceMapper rxmapper)
+	throws IOException, JSONException, XMLException, ClassNotFoundException {
 		// リクエストデータ受信
 		InputStream inputStream = req.getInputStream();
 		Object result = null;
@@ -85,11 +69,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				result = rxmapper.fromMessagePack(inputStream);
 			} finally {
-				inputStream.close();
+				try {
+					inputStream.close();
+				} catch (Exception re) {
+					logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
+				}
 			}
 			return result;
 		}
-		
+
 		BufferedReader reader = null;
 		try {
 			reader = new BufferedReader(new InputStreamReader(inputStream, ENCODING));
@@ -102,10 +90,10 @@ public class ReflexServletUtil implements ReflexServletConst {
 					result = rxmapper.fromXML(reader);
 				}
 			}
-			
+
 			if (result == null) {
 				String body = getBody(reader);
-				
+
 				if (body != null && body.length() > 0) {
 					boolean useJson = true;
 					if (body.startsWith("<")) {
@@ -119,7 +107,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				reader.close();
 			} catch (Exception re) {
-				// 何もしない
+				logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
 			}
 		}
 
@@ -133,8 +121,8 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param useJson true:JSON、false:XML
 	 * @return POSTデータをオブジェクトに変換したもの
 	 */
-	public Object getEntity(String body, IResourceMapper rxmapper, boolean useJson) 
-	throws IOException, JSONException, ClassNotFoundException {
+	public static Object getEntity(String body, IResourceMapper rxmapper, boolean useJson)
+	throws IOException, JSONException, XMLException, ClassNotFoundException {
 		Object result = null;
 		boolean changeObj = false;
 
@@ -152,7 +140,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 			}
 			if (!changeObj) {
 				if (body.length() > 0) {
-					//if (contenttype.toLowerCase().indexOf("javascript") >= 0) {
 					char firstChar = body.charAt(0);
 					if (firstChar == '{' && useJson) {
 						result = rxmapper.fromJSON(body);
@@ -167,34 +154,11 @@ public class ReflexServletUtil implements ReflexServletConst {
 	}
 
 	/**
-	 * リクエストデータ取得
-	 * ストリームから直接XMLを読み取り、オブジェクトに変換します
-	 * @param req HttpServletRequest
-	 * @param rxmapper ResourceMapper
-	 * @return POSTデータをオブジェクトに変換したもの
-	 */
-	public Object getXmlEntity(HttpServletRequest req, IResourceMapper rxmapper) 
-	throws IOException, JSONException {
-		BufferedReader in = null;
-		Object result = null;
-		try {
-			in = new BufferedReader(new InputStreamReader(req.getInputStream()));
-			result = rxmapper.fromXML(in);
-
-		} finally {
-			if (in != null) {
-				in.close();
-			}
-		}
-		return result;
-	}
-
-	/**
 	 * リクエストデータの文字列を取得します
 	 * @param req HttpServletRequest
 	 * @return リクエストデータ文字列
 	 */
-	public String getBody(HttpServletRequest req) throws IOException, JSONException {
+	public static String getBody(HttpServletRequest req) throws IOException {
 		// リクエストデータ受信
 		InputStream inputStream = req.getInputStream();
 		String body = null;
@@ -208,7 +172,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			try {
 				reader.close();
 			} catch (Exception re) {
-				// 何もしない
+				logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
 			}
 		}
 
@@ -220,7 +184,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param b BufferedReader
 	 * @return Bufferから読み込んだ文字列
 	 */
-	public String getBody(BufferedReader b) throws IOException {
+	public static String getBody(BufferedReader b) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		String str;
 		boolean isFirst = true;
@@ -234,7 +198,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		}
 		return sb.toString();
 	}
-	
+
 	/**
 	 * レスポンス出力
 	 * @param req HttpServletRequest
@@ -247,15 +211,18 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 * @param isDisableDeflate MessagePackをDeflate圧縮しない場合true
+	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
+	 * @param isSameOrigin SameOrigin指定をする場合true
 	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict) 
+	public static void doResponse(HttpServletRequest req, HttpServletResponse resp,
+			Object entities, int format, IResourceMapper rxmapper,
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
+			boolean isNoCache, boolean isSameOrigin)
 	throws IOException {
-		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, 
-				isGZip, isStrict, null);
+		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode,
+				isGZip, isStrict, isNoCache, isSameOrigin, null);
 	}
-	
+
 	/**
 	 * レスポンス出力
 	 * @param req HttpServletRequest
@@ -265,27 +232,20 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param rxmapper ResourceMapper
 	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param contentType Content-Type
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isStrict XMLの名前空間を出力する場合true
+	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
+	 * @param isSameOrigin 「X-Frame-Options: SAMEORIGIN」レスポンスヘッダを指定する場合true
+	 * @param contentType Content-Type
 	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict, 
-			String contentType) 
+	public static void doResponse(HttpServletRequest req, HttpServletResponse resp,
+			Object entities, int format, IResourceMapper rxmapper,
+			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
+			boolean isNoCache, boolean isSameOrigin, String contentType)
 	throws IOException {
-		/*
-		OutputStream out = null;
-		if (isGZip && isGZip(req)) {
-			setGZipHeader(resp);
-			out = new GZIPOutputStream(resp.getOutputStream());
-		} else {
-			out = resp.getOutputStream();
-		}
-		*/
 		boolean isRespGZip = isGZip && isGZip(req);
-		
-		boolean isDeflate = isSetHeader(req, HEADER_ACCEPT_ENCODING, 
+
+		boolean isDeflate = isSetHeader(req, HEADER_ACCEPT_ENCODING,
 				HEADER_VALUE_DEFLATE);
 
 		// ステータスコードの設定
@@ -295,18 +255,34 @@ public class ReflexServletUtil implements ReflexServletConst {
 			resp.setContentType(contentType);
 		}
 
+		// ブラウザにキャッシュしない場合
+		if (isNoCache) {
+			resp.addHeader(PRAGMA, NO_CACHE);
+			resp.addHeader(CACHE_CONTROL, CACHE_CONTROL_VALUE);
+			resp.addHeader(EXPIRES, PAST_DATE);
+		}
+		// SAMEORIGIN指定 (クリックジャッキング対策)
+		if (isSameOrigin) {
+			resp.addHeader(HEADER_FRAME_OPTIONS, SAMEORIGIN);
+		}
+		// ブラウザのクロスサイトスクリプティングのフィルタ機能を使用
+		resp.addHeader(HEADER_XSS_PROTECTION, HEADER_XSS_PROTECTION_MODEBLOCK);
+		// HTTPレスポンス全体を検査（sniffing）してコンテンツ タイプを判断し、「Content-Type」を無視した動作を行うことを防止する。(IE対策)
+		resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
+
 		// status=204 の場合はコンテントを返却しない。
 		if (entities == null || statusCode == HttpStatus.SC_NO_CONTENT) {
 			return;
 		}
 
-		// MessagePackの場合は、PrintWriterでなくOutputStreamを使用する。
-		if (!(entities instanceof String) && format == FORMAT_MESSAGEPACK) {
+		// MessagePackまたはバイト配列の場合は、PrintWriterでなくOutputStreamを使用する。
+		if ((!(entities instanceof String) && format == FORMAT_MESSAGEPACK) ||
+				entities instanceof byte[]) {
 			// MessagePack
-			if (StringUtils.isBlank(contentType)) {
+			if (format == FORMAT_MESSAGEPACK && StringUtils.isBlank(contentType)) {
 				resp.setContentType(CONTENT_TYPE_MESSAGEPACK);
 			}
-			
+
 			OutputStream out = null;
 			try {
 				// Deflateの場合はGZip圧縮しない。
@@ -319,31 +295,39 @@ public class ReflexServletUtil implements ReflexServletConst {
 				} else {
 					out = resp.getOutputStream();
 				}
-				
-				// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
+
 				byte[] respData = null;
-				byte[] msgData = rxmapper.toMessagePack(entities);
-				if (isDeflate) {
-					// Deflate圧縮
-					if (deflateUtil != null) {
-						respData = deflateUtil.deflate(msgData);
-					} else {
-						respData = DeflateUtil.deflateOneTime(msgData);
-					}
+				if (entities instanceof byte[]) {
+					// バイト配列データ
+					respData = (byte[])entities;
 				} else {
-					// Deflateなし
-					respData = msgData;
+					// 一旦MessagePack形式にし、deflate圧縮したものをレスポンスする。
+					byte[] msgData = rxmapper.toMessagePack(entities);
+					if (isDeflate) {
+						// Deflate圧縮
+						if (deflateUtil != null) {
+							respData = deflateUtil.deflate(msgData);
+						} else {
+							respData = DeflateUtil.deflateOneTime(msgData);
+						}
+					} else {
+						// Deflateなし
+						respData = msgData;
+					}
 				}
+
 				if (respData != null && respData.length > 0) {
 					out.write(respData);
 				}
-				
+
 			} finally {
 				try {
 					out.close();
-				} catch (IOException e) {}	// Do nothing.
+				} catch (Exception e) {
+					logger.log(Level.WARNING, "[close error] " + e.getClass().getName(), e);
+				}
 			}
-			
+
 		} else {
 			// レスポンスデータ出力
 			PrintWriter prtout = null;
@@ -357,47 +341,49 @@ public class ReflexServletUtil implements ReflexServletConst {
 				}
 				prtout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(
 						out, ENCODING)));
-				
+
 				if (entities instanceof String) {
 					// 文字列
 					prtout.write((String)entities);
-					
+
 				} else if (format == FORMAT_JSON) {
 					// JSON
 					if (StringUtils.isBlank(contentType)) {
 						resp.setContentType(CONTENT_TYPE_REFLEX_JSON);
-						resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, 
-								HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
+						//resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS,
+						//		HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);	// 全体に指定
 					}
-					
+
 					// JSON中身
 					if (entities != null) {
 						rxmapper.toJSON(entities, prtout);
 					}
-		
+
 				} else {
 					// XMLヘッダー出力
 					if (StringUtils.isBlank(contentType)) {
 						resp.setContentType(CONTENT_TYPE_REFLEX_XML);
 					}
-	
+
 					// XML
 					if (entities != null) {
 						prtout.print(XMLHEAD);
-						rxmapper.toXML(entities, prtout, isStrict);
+						rxmapper.toXML(entities, prtout);
 					}
 				}
-	
+
 			} finally {
 				if (prtout != null) {
 					try {
 						prtout.close();
-					} catch (Exception e) {}	// Do nothing.
+					} catch (Exception e) {
+						logger.log(Level.WARNING, "[close error] " + e.getClass().getName(), e);
+					}
 				}
 			}
 		}
 	}
-	
+
 	/**
 	 * HTMLレスポンス出力
 	 * @param req HttpServletRequest
@@ -405,12 +391,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param html HTML
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
 	 * @param isGZip GZIP形式にする場合true
+	 * @param isNoCache ブラウザにキャッシュしない場合true
+	 * @param isSameOrigin SameOrigin指定をする場合true
 	 */
-	public void doHtmlPage(HttpServletRequest req, HttpServletResponse resp, 
-			String html, int statusCode, boolean isGZip)
+	public static void doHtmlPage(HttpServletRequest req, HttpServletResponse resp,
+			String html, int statusCode, boolean isGZip, boolean isNoCache,
+			boolean isSameOrigin)
 	throws IOException {
-		doResponse(req, resp, html, 0, null, null, statusCode, isGZip, 
-				false, CONTENT_TYPE_HTML_CHARSET);
+		doResponse(req, resp, html, 0, null, null, statusCode, isGZip,
+				false, isNoCache, isSameOrigin, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**
@@ -421,7 +410,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param resp HttpServletResponse
 	 * @param exception 例外オブジェクト
 	 */
-	public void doErrorPage(HttpServletResponse resp, Throwable exception) 
+	public static void doErrorPage(HttpServletResponse resp, Throwable exception)
 	throws IOException {
 
 		int httpStatus = SC_INTERNAL_SERVER_ERROR;
@@ -459,10 +448,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 		prtout.print(REFLEX_LOGOS);
 		prtout.print("\"></img></a></p>");
 
-/*
-		prtout.print("<p align=\"center\"><font size=\"6\"><b>Error Report");
-		prtout.print("</b></font></p>");
-*/
 		prtout.print("<hr/>");
 
 		prtout.print("<font size=\"5\">");
@@ -521,10 +506,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 		prtout.print("<hr/>");
 		prtout.print(NEWLINE);
 
-/*		prtout.print("<a href=\"http://www.virtual-tech.net/\"><img src=\"");
-		prtout.print(REFLEX_LOGOS);
-		prtout.print("\"></img></a>");
-*/
 		prtout.print("<font size=\"5\">");
 		prtout.print("<SPAN style='Arial;font-size:38%;vertical;color:#B2B2B2'>");
 		prtout.print("<b>");
@@ -540,10 +521,13 @@ public class ReflexServletUtil implements ReflexServletConst {
 		prtout.print(NEWLINE);
 		prtout.print("</html>");
 
-
-		prtout.flush();
-		out.flush();
-		out.close();
+		try {
+			prtout.flush();
+			out.flush();
+			out.close();
+		} catch (Exception re) {
+			logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
+		}
 	}
 
 	/**
@@ -551,7 +535,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req HttpServletRequest
 	 * @param resp HttpServletResponse
 	 */
-	public void doResponseFile(HttpServletRequest req, HttpServletResponse resp) 
+	public static void doResponseFile(HttpServletRequest req, HttpServletResponse resp)
 	throws IOException {
 
 		String reqFileTemp = "";
@@ -601,7 +585,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 		} finally {
 			try {
 				in.close();
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "[close error] " + e.getClass().getName(), e);
+			}
 		}
 	}
 
@@ -612,7 +598,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param in InputStream
 	 * @param contentType content-type
 	 */
-	public void setResponseFile(HttpServletRequest req, HttpServletResponse resp, 
+	public static void setResponseFile(HttpServletRequest req, HttpServletResponse resp,
 			InputStream in, String contentType)
 	throws IOException {
 		OutputStream out = null;
@@ -638,7 +624,9 @@ public class ReflexServletUtil implements ReflexServletConst {
 		} finally {
 			try {
 				out.close();
-			} catch (Exception e) {}
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "[close error] " + e.getClass().getName(), e);
+			}
 		}
 	}
 
@@ -647,7 +635,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req
 	 * @return true:gzip対応、false:gzip対応でない
 	 */
-	public boolean isGZip(HttpServletRequest req) {
+	public static boolean isGZip(HttpServletRequest req) {
 		boolean ret = false;
 		if (req != null) {
 			String acceptedEncodings = req.getHeader(HEADER_ACCEPT_ENCODING);	//クライアントの受理可能エンコーディング
@@ -655,18 +643,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 				acceptedEncodings = req.getHeader(HEADER_ACCEPT_ENCODING_LOWERCASE);
 			}
 			return HeaderUtil.containsHeader(acceptedEncodings, HEADER_VALUE_GZIP);
-			//if (acceptedEncodings != null && acceptedEncodings.indexOf("gzip") != -1) {
-			//	ret = true;
-			//}
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * GZip圧縮のレスポンスヘッダを設定します
 	 * @param resp
 	 */
-	public void setGZipHeader(HttpServletResponse resp) {
+	public static void setGZipHeader(HttpServletResponse resp) {
 		resp.setHeader(HEADER_CONTENT_ENCODING, HEADER_VALUE_GZIP);
 	}
 
@@ -703,7 +688,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param req HttpServletRequest
 	 * @return 拡張子。ない場合はnull。
 	 */
-	public String getSuffix(HttpServletRequest req) {
+	public static String getSuffix(HttpServletRequest req) {
 		String suffix = null;
 		String uri = req.getRequestURI();
 		int suffixIdx = uri.lastIndexOf(".");
@@ -715,7 +700,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		}
 		return suffix;
 	}
-	
+
 	/**
 	 * useJsonフラグをformat区分に変換します.
 	 * @param useJson JSON形式を使用する場合true
@@ -728,7 +713,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 			return FORMAT_XML;
 		}
 	}
-	
+
 	/**
 	 * Content-Typeからformat区分を生成します.
 	 * @param req リクエスト
@@ -751,7 +736,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		}
 		return -1;
 	}
-	
+
 	/**
 	 * formatがMessagePack形式かどうかチェックする.
 	 * @param format 0:String, 1:XML, 2:JSON, 3:MessagePack
@@ -763,7 +748,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * formatがXML形式かどうかチェックする.
 	 * @param format 0:String, 1:XML, 2:JSON, 3:MessagePack
@@ -775,7 +760,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * formatがJSON形式かどうかチェックする.
 	 * @param format 0:String, 1:XML, 2:JSON, 3:MessagePack
@@ -799,25 +784,7 @@ public class ReflexServletUtil implements ReflexServletConst {
 		}
 		return false;
 	}
-	
-	/**
-	 * X-Requested-WithヘッダがXMLHttpRequestとなっているかどうかチェックする.
-	 * @param req リクエスト
-	 * @return X-Requested-WithヘッダがXMLHttpRequestとなっている場合true
-	 */
-	public static boolean isXMLHttpRequest(HttpServletRequest req) {
-		if (req != null) {
-			String requestedWith = req.getHeader(X_REQUESTED_WITH);
-			if (requestedWith == null) {
-				requestedWith = req.getHeader(X_REQUESTED_WITH_LOWER);
-			}
-			if (X_REQUESTED_WITH_WHR.equals(requestedWith)) {
-				return true;
-			}
-		}
-		return false;
-	}
-	
+
 	/**
 	 * X-Requested-Withヘッダに値が設定されているかどうかチェックする.
 	 * @param req リクエスト
@@ -825,21 +792,32 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 */
 	public static boolean hasXRequestedWith(HttpServletRequest req) {
 		if (req != null) {
-			String requestedWith = req.getHeader(X_REQUESTED_WITH);
-			if (requestedWith == null) {
-				requestedWith = req.getHeader(X_REQUESTED_WITH_LOWER);
+			// `X-`または`x-`で始まるヘッダの指定があればOK、ただし`x-forwarded`は除く。
+			// また`Authorization`ヘッダがあればOK。
+			// (2024.10.31)ブラウザからのURLリクエストで x-forwarded-for 等が送信されてくるので、x-だけでは判断できない。
+			Enumeration<String> enu = req.getHeaderNames();
+			while (enu.hasMoreElements()) {
+				String name = enu.nextElement();
+				String nameLower = name.toLowerCase(Locale.ENGLISH);
+				if ((nameLower.startsWith(HEADER_X_LOWER_PREFIX) && 
+						!nameLower.startsWith(HEADER_X_FORWARDED_LOWER_PREFIX)) ||
+						nameLower.equals(HEADER_AUTHORIZATION_LOWER)) {
+					if (!StringUtils.isBlank(req.getHeader(name))) {
+						return true;
+					}
+				}
 			}
-			return !StringUtils.isBlank(requestedWith);
 		}
 		return false;
 	}
-	
+
 	/**
 	 * リクエストヘッダから指定されたキーの値のうち、先頭が指定された文字列と等しい値を返却します。
+	 * 同じヘッダ名で複数の値が設定されている場合、Enumerationでなくカンマ区切り(", ")の場合にも対応。
 	 * @param req リクエスト
 	 * @param key リクエストヘッダのキー
 	 * @param valuePrefix リクエストヘッダの値の先頭文字列
-	 * @return リクエストヘッダのうち、指定されたキー・先頭文字列に合致した値。
+	 * @return リクエストヘッダのうち、指定されたキー・先頭文字列に合致した値から、先頭文字列を除去した値。
 	 *         複数存在する場合は最初の1件を返却します。
 	 */
 	public static String getHeaderValue(HttpServletRequest req,
@@ -852,14 +830,24 @@ public class ReflexServletUtil implements ReflexServletConst {
 		if (enu != null) {
 			while (enu.hasMoreElements()) {
 				String value = enu.nextElement();
-				if (value != null && value.startsWith(valuePrefix)) {
-					return value;
+				if (value != null) {
+					if ("".equals(valuePrefix)) {
+						return value;
+					} else {
+						// 同じヘッダ名で複数の値が設定されている場合で、Enumerationでなくカンマ区切り(", ")の場合に対応。
+						String[] valueParts = value.split(", ");
+						for (String valuePart : valueParts) {
+							if (valuePart.startsWith(valuePrefix)) {
+								return valuePart.substring(valuePrefix.length());
+							}
+						}
+					}
 				}
 			}
 		}
 		return null;
 	}
-	
+
 	/**
 	 * リクエストヘッダのうち、指定されたキーの値に指定された値が含まれているかどうかチェックする.
 	 * @param req リクエスト

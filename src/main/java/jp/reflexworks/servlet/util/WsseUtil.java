@@ -4,20 +4,22 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.text.ParseException;
 import java.util.Date;
-import java.util.Map;
-import java.util.List;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.codec.binary.Base64;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jp.sourceforge.reflex.util.DateUtil;
+import jp.sourceforge.reflex.util.SHA1;
 import jp.sourceforge.reflex.util.SHA256;
 import jp.sourceforge.reflex.util.StringUtils;
+import jp.sourceforge.reflex.util.URLDecoderPlus;
 
 /**
  * WSSE情報の取得、編集を行うクラス
@@ -54,6 +56,10 @@ public class WsseUtil extends AuthTokenUtil {
 			// URLパラメータから認証情報を取得
 			auth = parseWSSEparam(req);
 		}
+		if (auth == null) {
+			// Cookieから認証情報を取得
+			auth = parseWSSEcookie(req);
+		}
 		
 		return auth;
 	}
@@ -64,16 +70,22 @@ public class WsseUtil extends AuthTokenUtil {
 	 * @return WSSE認証情報
 	 */
 	public WsseAuth getWsseAuthFromHeader(HttpServletRequest req) {
-		String value = req.getHeader(WSSE);
+		String value = getWSSEValue(req);
 		if (!StringUtils.isBlank(value)) {
-			return parseWSSEheader(value);
-		}
-		value = getRXIDValue(req.getHeaders(HEADER_AUTHORIZATION));
-		if (value != null) {
-			String rxid = extractRXID(value);
-			if (!StringUtils.isBlank(rxid)) {
-				return parseRXID(rxid);
+			WsseAuth auth = parseWSSEheader(value);
+			// 空の場合はブランクオブジェクトを作成して返却する。
+			if (auth == null) {
+				auth = createBlankWsseAuth(false);
 			}
+			return auth;
+		}
+		String rxid = getRXIDValueByHeader(req);
+		if (!StringUtils.isBlank(rxid)) {
+			WsseAuth auth = parseRXID(rxid);
+			if (auth == null) {
+				auth = createBlankWsseAuth(true);
+			}
+			return auth;
 		}
 		return null;
 	}
@@ -85,14 +97,69 @@ public class WsseUtil extends AuthTokenUtil {
 	 */
 	public WsseAuth parseWSSEparam(HttpServletRequest req) {
 		WsseAuth auth = null;
-		String rxid = req.getParameter(RXID);
+		String rxid = getRXIDValueByParam(req);
 		if (rxid != null) {
 			auth = parseRXID(rxid);
-			if (auth != null) {
-				auth.isQueryString = true;
+			if (auth == null) {
+				// 空の場合はブランクオブジェクトを作成して返却する。
+				auth = createBlankWsseAuth(true);
 			}
+			auth.isQueryString = true;
 		}
 		return auth;
+	}
+
+	/**
+	 * CookieからWSSE認証情報を取り出します
+	 * @param req リクエスト
+	 * @return WSSE認証情報
+	 */
+	public WsseAuth parseWSSEcookie(HttpServletRequest req) {
+		WsseAuth auth = null;
+		Cookie cookie = null;
+		
+		// RXID
+		if (auth == null) {
+			cookie = getCookie(req, RXID_LEGACY);
+			if (cookie != null) {
+				String value = cookie.getValue();
+				auth = parseRXID(value);
+				if (auth == null) {
+					// 空の場合はブランクオブジェクトを作成して返却する。
+					auth = createBlankWsseAuth(true);
+				}
+				auth.isCookie = true;
+			}
+		}
+		
+		return auth;
+	}
+		
+	private Cookie getCookie(HttpServletRequest req, String key) {
+		if (key == null) {
+			return null;
+		}
+		Cookie[] cookies = req.getCookies();
+		if (cookies != null) {
+			for (Cookie cookie : cookies) {
+				if (key.equals(cookie.getName())) {
+					return cookie;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * WSSE認証チェック.
+	 * ハッシュ関数はSHA-256を使用します。
+	 * @param auth WSSE認証情報
+	 * @param password パスワード
+	 * @param apiKey APIKey
+	 * @return WSSE認証OKの場合true、エラーの場合false
+	 */
+	public boolean checkAuth(WsseAuth auth, String password, String apiKey) {
+		return checkAuth(auth, password, apiKey, false);
 	}
 
 	/**
@@ -100,9 +167,11 @@ public class WsseUtil extends AuthTokenUtil {
 	 * @param auth WSSE認証情報
 	 * @param password パスワード
 	 * @param apiKey APIKey
+	 * @param isSha1 ハッシュ関数にSHA-1を使用する場合true
 	 * @return WSSE認証OKの場合true、エラーの場合false
 	 */
-	public boolean checkAuth(WsseAuth auth, String password, String apiKey) {
+	public boolean checkAuth(WsseAuth auth, String password, String apiKey,
+			boolean isSha1) {
 		if (auth == null) {
 			return false;
 		}
@@ -147,7 +216,12 @@ public class WsseUtil extends AuthTokenUtil {
 			//byte[] mdDigestB = md.digest();
 			
 			//digestを比較
-			byte[] mdDigestB = SHA256.hash(v);
+			byte[] mdDigestB = null;
+			if (isSha1) {
+				mdDigestB = SHA1.hash(v);
+			} else {
+				mdDigestB = SHA256.hash(v);
+			}
 			boolean isEqual = MessageDigest.isEqual(mdDigestB, digestB);
 			if (isEqual) {
 				auth.password = password;	// Wsseオブジェクトにpasswordを設定
@@ -173,18 +247,70 @@ public class WsseUtil extends AuthTokenUtil {
 			return null;
 		}
 		List<String> rxids = headers.get(HEADER_AUTHORIZATION);
-		if (rxids != null && rxids.size() > 0) {
-			//String rxid = rxids.get(0);
+		if (rxids != null && !rxids.isEmpty()) {
 			String rxid = getRXIDValue(rxids);
 			return extractRXID(rxid);
 		}
 		return null;
 	}
 	
-	private String getRXIDValue(Enumeration values) {
+	/**
+	 * リクエストからWSSE文字列を取得.
+	 * @param req リクエスト
+	 * @return WSSE文字列
+	 */
+	public String getWSSEValue(HttpServletRequest req) {
+		String value = req.getHeader(WSSE);
+		if (StringUtils.isBlank(value)) {
+			value = req.getHeader(WSSE_UPPER_LOWER);
+		}
+		if (StringUtils.isBlank(value)) {
+			value = req.getHeader(WSSE_LOWER);
+		}
+		return value;
+	}
+	
+	/**
+	 * リクエストヘッダからRXID文字列を取得.
+	 * @param req リクエスト
+	 * @return RXID
+	 */
+	public String getRXIDValueByHeader(HttpServletRequest req) {
+		String value = getRXIDValue(req.getHeaders(HEADER_AUTHORIZATION));
+		return extractRXID(value);
+	}
+	
+	/**
+	 * リクエストのURLパラメータからRXIDを取得.
+	 * @param req リクエスト
+	 * @return RXID
+	 */
+	public String getRXIDValueByParam(HttpServletRequest req) {
+		String rxid = URLDecoderPlus.urlDecode(req.getParameter(RXID));
+		if (rxid == null) {
+			// 旧フォーマットも受け付ける。
+			rxid = URLDecoderPlus.urlDecode(req.getParameter(RXID_LEGACY));
+		}
+		return rxid;
+	}
+	
+	/**
+	 * リクエストのCookieからRXIDを取得.
+	 * @param req リクエスト
+	 * @return RXID
+	 */
+	public String getRXIDValueByCookie(HttpServletRequest req) {
+		Cookie cookie = getCookie(req, RXID_LEGACY);
+		if (cookie != null) {
+			return cookie.getValue();
+		}
+		return null;
+	}
+	
+	private String getRXIDValue(Enumeration<String> values) {
 		if (values != null) {
 			while (values.hasMoreElements()) {
-				String value = (String)values.nextElement();
+				String value = values.nextElement();
 				String tmp = getRXIDValue(value);
 				if (tmp != null) {
 					return tmp;
@@ -225,8 +351,6 @@ public class WsseUtil extends AuthTokenUtil {
 		if (resp == null || StringUtils.isBlank(rxid)) {
 			return;
 		}
-		//String headerValue = editRXIDHeader(rxid);
-		//resp.addHeader(HEADER_AUTHORIZATION, headerValue);
 		resp.addHeader(HEADER_X_RXID, rxid);
 	}
 
@@ -328,6 +452,17 @@ public class WsseUtil extends AuthTokenUtil {
 			logger.info("ParseException : " + e.getMessage());
 		}
 		return false;
+	}
+	
+	/**
+	 * WSSEおよびRXIDがパースできなかった場合に使用。
+	 * @param isRxid RXIDの場合true
+	 * @return 空のWSSE情報
+	 */
+	private WsseAuth createBlankWsseAuth(boolean isRxid) {
+		WsseAuth auth = new WsseAuth(null, null, null, null);
+		auth.isRxid = isRxid;
+		return auth;
 	}
 
 }

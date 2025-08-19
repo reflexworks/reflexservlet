@@ -26,12 +26,12 @@ public class RXID {
 		WsseUtil wsseUtil = new WsseUtil();
 
 		try {
-			String wsse = wsseUtil.createWsseHeaderValue(username, password);
+			String wsse = WsseUtil.createWsseHeaderValue(username, password);
 	
 			System.out.println("wsse=" + wsse);
 	
 			// 新RXIDのチェック
-			WsseAuth auth = wsseUtil.parseWSSEheader(wsse);
+			WsseAuth auth = WsseUtil.parseWSSEheader(wsse);
 			String rxid = getRXIDString(auth);
 			WsseAuth wsseauth = parseRXID(rxid);
 			
@@ -58,13 +58,22 @@ public class RXID {
 			// RXIDはAPIKey付きで作成する必要がある。
 			System.out.println("--- RXID with APIKey ---");
 			System.out.println("username=" + username + ", password=" + password + ", apiKey=" + apiKey);
-			String rxid3 = wsseUtil.createRXIDString(username, password, serviceName, apiKey);
+			String rxid3 = WsseUtil.createRXIDString(username, password, serviceName, apiKey);
 			System.out.println("rxid=" + rxid3);
-			WsseAuth wsseauth3 = wsseUtil.parseRXID(rxid3);
+			WsseAuth wsseauth3 = WsseUtil.parseRXID(rxid3);
 			System.out.println(wsseauth3.toString());
 			boolean checkauth3 = wsseUtil.checkAuth(wsseauth3, password, apiKey);
 			System.out.println("checkauth=" + checkauth3);
-			
+
+			// 文字列変換
+			System.out.println("--- String ---");
+			String str0 = "FFXrqijGXTx1Al1gucy733QQsfgMf11IprLUHUetM4hhYD41";
+			System.out.println("  before : " + str0);
+			String str1 = WsseUtil.rot13(str0);
+			System.out.println("convert1 : " + str1);
+			String str2 = WsseUtil.rot13(str1);
+			System.out.println("convert2 : " + str2);
+
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

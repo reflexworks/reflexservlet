@@ -1,25 +1,25 @@
 package jp.reflexworks.servlet.util;
 
-import java.io.InputStream;
 import java.io.IOException;
-import java.util.Map;
+import java.io.InputStream;
+import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.Enumeration;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletContextEvent;
+import jakarta.servlet.ServletContextListener;
 import jp.sourceforge.reflex.util.FileUtil;
 import jp.sourceforge.reflex.util.StringUtils;
-
-import javax.servlet.ServletContext;
-import javax.servlet.ServletContextEvent;
-import javax.servlet.ServletContextListener;
 
 public class ServletContextUtil implements ServletContextListener {
 	
@@ -39,7 +39,7 @@ public class ServletContextUtil implements ServletContextListener {
 	private Logger logger = Logger.getLogger(this.getClass().getName());
 	private ServletContext servletContext;
 	private Properties properties;
-	private Pattern pattern;
+	private Pattern pattern = Pattern.compile(REGEX_SYSTEM_PARAM);
 	private static ServletContextUtil plugin = null;
 	//private FileUtil fileUtil = new FileUtil();
 
@@ -52,32 +52,13 @@ public class ServletContextUtil implements ServletContextListener {
 	}
 	
 	protected void init() {
-		this.pattern = Pattern.compile(REGEX_SYSTEM_PARAM);
+		//this.pattern = Pattern.compile(REGEX_SYSTEM_PARAM);
 		String propertyPath = getConv(PARAM_PROPERTY);
+		init(propertyPath);
+	}
+	
+	protected void init(String propertyPath) {
 		if (propertyPath != null && propertyPath.length() > 0) {
-			/*
-			InputStream in = null;
-			File propertyFile = new File(propertyPath);
-			if (propertyFile.exists()) {
-				try {
-					in = new FileInputStream(propertyFile);
-				} catch (IOException e) {
-					logger.warning(e.getMessage());
-				}
-			}
-			
-			if (in == null) {
-				ClassLoader loader = this.getClass().getClassLoader();
-				URL propertyURL = loader.getResource(propertyPath);
-				if (propertyURL != null) {
-					try {
-						in = propertyURL.openStream();
-					} catch (IOException e) {
-						logger.warning(e.getMessage());
-					}
-				}
-			}
-			*/
 			InputStream in = FileUtil.getInputStreamFromFile(propertyPath);
 			
 			if (in != null) {
@@ -86,11 +67,10 @@ public class ServletContextUtil implements ServletContextListener {
 					this.properties.load(in);
 					
 				} catch (IOException e) {
-					logger.warning(e.getMessage());
+					logger.log(Level.WARNING, e.getClass().getName(), e);
 				}
 			}
 		}
-
 	}
 
 	public void contextDestroyed(ServletContextEvent sce) {
@@ -213,7 +193,9 @@ public class ServletContextUtil implements ServletContextListener {
 							REGEX_SYSTEM_PARAM_START + group1 + REGEX_SYSTEM_PARAM_END, 
 							propValue);
 				} else {
-					logger.info("System Property ${" + group1 + "} is required.");
+					if (logger.isLoggable(Level.INFO)) {
+						logger.info("System Property ${" + group1 + "} is required.");
+					}
 					ret = null;
 				}
 			}
@@ -566,10 +548,10 @@ public class ServletContextUtil implements ServletContextListener {
 	 */
 	private void setPropertySet(Set<String> params, String prefix) {
 		if (params != null && prefix != null && prefix.length() > 0) {
-			if (servletContext != null) {
-				Enumeration<String> enu = this.servletContext.getInitParameterNames();
+			if (properties != null) {
+				Enumeration enu = this.properties.propertyNames();
 				while (enu.hasMoreElements()) {
-					String name = enu.nextElement();
+					String name = (String)enu.nextElement();
 					if (name.startsWith(prefix)) {
 						params.add(get(name));
 					}
