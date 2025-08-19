@@ -1,27 +1,7 @@
 package jp.reflexworks.servlet.model.webxml;
 
-import java.util.List;
 import java.io.Serializable;
-
-import jp.reflexworks.servlet.model.webxml.Context__param;
-import jp.reflexworks.servlet.model.webxml.Ejb__local__ref;
-import jp.reflexworks.servlet.model.webxml.Ejb__ref;
-import jp.reflexworks.servlet.model.webxml.Env__entry;
-import jp.reflexworks.servlet.model.webxml.Error__page;
-import jp.reflexworks.servlet.model.webxml.Filter;
-import jp.reflexworks.servlet.model.webxml.Filter__mapping;
-import jp.reflexworks.servlet.model.webxml.Listener;
-import jp.reflexworks.servlet.model.webxml.Login__config;
-import jp.reflexworks.servlet.model.webxml.Mime__mapping;
-import jp.reflexworks.servlet.model.webxml.Resource__env__ref;
-import jp.reflexworks.servlet.model.webxml.Resource__ref;
-import jp.reflexworks.servlet.model.webxml.Security__constraint;
-import jp.reflexworks.servlet.model.webxml.Security__role;
-import jp.reflexworks.servlet.model.webxml.Servlet;
-import jp.reflexworks.servlet.model.webxml.Servlet__mapping;
-import jp.reflexworks.servlet.model.webxml.Session__config;
-import jp.reflexworks.servlet.model.webxml.Taglib;
-import jp.reflexworks.servlet.model.webxml.Welcome__file__list;
+import java.util.List;
 
 public class Web__app implements Serializable {
 	

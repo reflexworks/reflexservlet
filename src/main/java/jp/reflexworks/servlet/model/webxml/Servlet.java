@@ -3,10 +3,6 @@ package jp.reflexworks.servlet.model.webxml;
 import java.io.Serializable;
 import java.util.List;
 
-import jp.reflexworks.servlet.model.webxml.Init__param;
-import jp.reflexworks.servlet.model.webxml.Run__as;
-import jp.reflexworks.servlet.model.webxml.Security__role__ref;
-
 public class Servlet implements Serializable {
 	
 	public String icon;

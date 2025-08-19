@@ -3,9 +3,6 @@ package jp.reflexworks.servlet.model.webxml;
 import java.io.Serializable;
 import java.util.List;
 
-import jp.reflexworks.servlet.model.webxml.Http__method;
-import jp.reflexworks.servlet.model.webxml.Url__pattern;
-
 public class Web__resource__collection implements Serializable {
 
 	public String web__resource__name;

@@ -5,6 +5,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import jp.sourceforge.reflex.util.FieldMapper;
 
 public class RequestMapper extends FieldMapper {
@@ -34,13 +35,13 @@ public class RequestMapper extends FieldMapper {
 
 					Class type = fld.getType();
 					if (type.equals(Integer.class)) {
-						propvalue = new Integer(propvalueStr);
+						propvalue = Integer.parseInt(propvalueStr);
 					} else if (type.equals(Long.class)) {
-						propvalue = new Long(propvalueStr);
+						propvalue = Long.parseLong(propvalueStr);
 					} else if (type.equals(Float.class)) {
-						propvalue = new Float(propvalueStr);
+						propvalue = Float.parseFloat(propvalueStr);
 					} else if (type.equals(Double.class)) {
-						propvalue = new Double(propvalueStr);
+						propvalue = Double.parseDouble(propvalueStr);
 					} else if (type.equals(int.class)) {
 						propvalue = Integer.parseInt(propvalueStr);
 					} else if (type.equals(long.class)) {
