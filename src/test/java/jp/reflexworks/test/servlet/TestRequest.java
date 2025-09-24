@@ -17,6 +17,7 @@ import java.util.Map;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletConnection;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
@@ -28,6 +29,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.HttpUpgradeHandler;
 import jakarta.servlet.http.Part;
+
 import jp.reflexworks.servlet.ReflexServletConst;
 import jp.reflexworks.servlet.util.EnumerationConverter;
 import jp.sourceforge.reflex.util.StringUtils;
@@ -518,6 +520,24 @@ public class TestRequest implements HttpServletRequest {
 
 	@Override
 	public <T extends HttpUpgradeHandler> T upgrade(Class<T> handlerClass) throws IOException, ServletException {
+		// TODO 自動生成されたメソッド・スタブ
+		return null;
+	}
+
+	@Override
+	public String getRequestId() {
+		// TODO 自動生成されたメソッド・スタブ
+		return null;
+	}
+
+	@Override
+	public String getProtocolRequestId() {
+		// TODO 自動生成されたメソッド・スタブ
+		return null;
+	}
+
+	@Override
+	public ServletConnection getServletConnection() {
 		// TODO 自動生成されたメソッド・スタブ
 		return null;
 	}

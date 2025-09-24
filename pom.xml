@@ -28,11 +28,11 @@
       <artifactId>reflexcore</artifactId>
       <version>${reflexcoreVersion}</version>
     </dependency>
-    <!-- Jetty 11は jakarta servlet 5.0 -->
+    <!-- Jetty 12.0 は jakarta servlet 4.0, 5.0, 6.0 に対応 -->
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
-      <version>5.0.0</version>
+      <version>6.0.0</version>
     </dependency>
     
     <dependency>
