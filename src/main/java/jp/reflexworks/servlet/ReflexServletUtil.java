@@ -38,10 +38,15 @@ import jp.sourceforge.reflex.util.StringUtils;
  */
 public class ReflexServletUtil implements ReflexServletConst {
 
-	/** Reqest Header : X-Requested-With */
-	private static final String X_REQUESTED_WITH_LOWER =
-			X_REQUESTED_WITH.toLowerCase(Locale.ENGLISH);
-
+	/** Request Header Prefix : X- */
+	private static final String HEADER_X_PREFIX = "X-";
+	/** Request Header Prefix : x- */
+	private static final String HEADER_X_LOWER_PREFIX = HEADER_X_PREFIX.toLowerCase(Locale.ENGLISH);
+	/** Request Header Prefix : x-forwarded */
+	private static final String HEADER_X_FORWARDED_LOWER_PREFIX = "x-forwarded";
+	/** Request Header Prefix : x-forwarded */
+	private static final String HEADER_AUTHORIZATION_LOWER = HEADER_AUTHORIZATION.toLowerCase(Locale.ENGLISH);
+	
 	/** ロガー */
 	private static Logger logger = Logger.getLogger(ReflexServletUtil.class.getName());
 
@@ -781,41 +786,34 @@ public class ReflexServletUtil implements ReflexServletConst {
 	}
 
 	/**
-	 * X-Requested-WithヘッダがXMLHttpRequestとなっているかどうかチェックする.
-	 * @param req リクエスト
-	 * @return X-Requested-WithヘッダがXMLHttpRequestとなっている場合true
-	 */
-	public static boolean isXMLHttpRequest(HttpServletRequest req) {
-		if (req != null) {
-			String requestedWith = req.getHeader(X_REQUESTED_WITH);
-			if (requestedWith == null) {
-				requestedWith = req.getHeader(X_REQUESTED_WITH_LOWER);
-			}
-			if (X_REQUESTED_WITH_WHR.equals(requestedWith)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
 	 * X-Requested-Withヘッダに値が設定されているかどうかチェックする.
 	 * @param req リクエスト
 	 * @return X-Requested-Withヘッダに値が設定されている場合true
 	 */
 	public static boolean hasXRequestedWith(HttpServletRequest req) {
 		if (req != null) {
-			String requestedWith = req.getHeader(X_REQUESTED_WITH);
-			if (requestedWith == null) {
-				requestedWith = req.getHeader(X_REQUESTED_WITH_LOWER);
+			// `X-`または`x-`で始まるヘッダの指定があればOK、ただし`x-forwarded`は除く。
+			// また`Authorization`ヘッダがあればOK。
+			// (2024.10.31)ブラウザからのURLリクエストで x-forwarded-for 等が送信されてくるので、x-だけでは判断できない。
+			Enumeration<String> enu = req.getHeaderNames();
+			while (enu.hasMoreElements()) {
+				String name = enu.nextElement();
+				String nameLower = name.toLowerCase(Locale.ENGLISH);
+				if ((nameLower.startsWith(HEADER_X_LOWER_PREFIX) && 
+						!nameLower.startsWith(HEADER_X_FORWARDED_LOWER_PREFIX)) ||
+						nameLower.equals(HEADER_AUTHORIZATION_LOWER)) {
+					if (!StringUtils.isBlank(req.getHeader(name))) {
+						return true;
+					}
+				}
 			}
-			return !StringUtils.isBlank(requestedWith);
 		}
 		return false;
 	}
 
 	/**
 	 * リクエストヘッダから指定されたキーの値のうち、先頭が指定された文字列と等しい値を返却します。
+	 * 同じヘッダ名で複数の値が設定されている場合、Enumerationでなくカンマ区切り(", ")の場合にも対応。
 	 * @param req リクエスト
 	 * @param key リクエストヘッダのキー
 	 * @param valuePrefix リクエストヘッダの値の先頭文字列
@@ -835,8 +833,14 @@ public class ReflexServletUtil implements ReflexServletConst {
 				if (value != null) {
 					if ("".equals(valuePrefix)) {
 						return value;
-					} else if (value.startsWith(valuePrefix)) {
-						return value.substring(valuePrefix.length());
+					} else {
+						// 同じヘッダ名で複数の値が設定されている場合で、Enumerationでなくカンマ区切り(", ")の場合に対応。
+						String[] valueParts = value.split(", ");
+						for (String valuePart : valueParts) {
+							if (valuePart.startsWith(valuePrefix)) {
+								return valuePart.substring(valuePrefix.length());
+							}
+						}
 					}
 				}
 			}

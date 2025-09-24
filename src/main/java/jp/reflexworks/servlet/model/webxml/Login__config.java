@@ -2,8 +2,6 @@ package jp.reflexworks.servlet.model.webxml;
 
 import java.io.Serializable;
 
-import jp.reflexworks.servlet.model.webxml.Form__login__config;
-
 public class Login__config implements Serializable {
 
 	public String auth__method;

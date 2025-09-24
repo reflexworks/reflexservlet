@@ -3,10 +3,6 @@ package jp.reflexworks.servlet.model.webxml;
 import java.io.Serializable;
 import java.util.List;
 
-import jp.reflexworks.servlet.model.webxml.Auth__constraint;
-import jp.reflexworks.servlet.model.webxml.User__data__constraint;
-import jp.reflexworks.servlet.model.webxml.Web__resource__collection;
-
 public class Security__constraint implements Serializable {
 
 	public String description;

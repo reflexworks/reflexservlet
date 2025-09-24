@@ -3,8 +3,6 @@ package jp.reflexworks.servlet.model.webxml;
 import java.io.Serializable;
 import java.util.List;
 
-import jp.reflexworks.servlet.model.webxml.Role__name;
-
 public class Auth__constraint implements Serializable {
 
 	public String description;

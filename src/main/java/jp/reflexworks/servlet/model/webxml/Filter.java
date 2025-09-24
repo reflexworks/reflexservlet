@@ -3,8 +3,6 @@ package jp.reflexworks.servlet.model.webxml;
 import java.io.Serializable;
 import java.util.List;
 
-import jp.reflexworks.servlet.model.webxml.Init__param;
-
 public class Filter implements Serializable {
 	
 	public String icon;
