@@ -5,7 +5,7 @@
   <groupId>jp.reflexworks</groupId>
   <artifactId>reflexservlet</artifactId>
   <packaging>jar</packaging>
-  <version>9.0.0</version>
+  <version>10.0.0</version>
 
   <description>Reflex Servlet</description>
   <name>Reflex Servlet</name>
@@ -17,9 +17,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <reflexcoreVersion>9.0.0</reflexcoreVersion>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <reflexcoreVersion>10.0.0</reflexcoreVersion>
+    <maven.compiler.source>25</maven.compiler.source>
+    <maven.compiler.target>25</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -51,13 +51,13 @@
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-core</artifactId>
-      <version>1.5.20</version>
+      <version>1.5.21</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.5.20</version>
+      <version>1.5.21</version>
       <scope>test</scope>
     </dependency>
 
