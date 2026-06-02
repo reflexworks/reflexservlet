@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Locale;
@@ -552,7 +554,12 @@ public class ReflexServletUtil implements ReflexServletConst {
 
 		String reqFilePath = null;
 		reqFilePath = FileUtil.getResourceUrl(reqFileTemp);
-		URL url = new URL(reqFilePath);
+		URL url = null;
+		try {
+			url = new URI(reqFilePath).toURL();
+		} catch (URISyntaxException e) {
+			throw new IOException(e);
+		}
 
 		InputStream in = url.openStream();
 
