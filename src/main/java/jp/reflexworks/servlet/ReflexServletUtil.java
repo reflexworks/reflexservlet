@@ -19,7 +19,7 @@ import java.util.zip.GZIPOutputStream;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jp.reflexworks.servlet.exception.InvokeException;
+
 import jp.reflexworks.servlet.util.HeaderUtil;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.exception.JSONException;
@@ -405,134 +405,6 @@ public class ReflexServletUtil implements ReflexServletConst {
 	}
 
 	/**
-	 * エラーページ出力.
-	 * <p>
-	 * ReflexWorksのデフォルトエラーページを出力します.
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param exception 例外オブジェクト
-	 */
-	public static void doErrorPage(HttpServletResponse resp, Throwable exception)
-	throws IOException {
-
-		int httpStatus = SC_INTERNAL_SERVER_ERROR;
-		if (exception instanceof InvokeException) {
-			httpStatus = ((InvokeException)exception).getHttpStatus();
-		}
-
-		if (resp.containsHeader(HEADER_CONTENT_ENCODING)) {
-			resp.setHeader(HEADER_CONTENT_ENCODING, null);
-		}
-
-		OutputStream out = null;
-		out = resp.getOutputStream();
-
-		// レスポンスデータ出力
-		PrintWriter prtout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, ENCODING)));
-
-		resp.setContentType(CONTENT_TYPE_HTML_CHARSET);
-
-		prtout.print("<html>");
-		prtout.print(NEWLINE);
-		prtout.print("<head>");
-		prtout.print(NEWLINE);
-		prtout.print("<title>");
-		prtout.print(NEWLINE);
-		prtout.print("[ReflexContainer] Error Report ");
-		prtout.print("</title>");
-		prtout.print(NEWLINE);
-		prtout.print("</head>");
-		prtout.print(NEWLINE);
-		prtout.print("<body>");
-		prtout.print(NEWLINE);
-
-		prtout.print("<p align=\"center\"><a href=\"http://www.virtual-tech.net/\"><img src=\"");
-		prtout.print(REFLEX_LOGOS);
-		prtout.print("\"></img></a></p>");
-
-		prtout.print("<hr/>");
-
-		prtout.print("<font size=\"5\">");
-		prtout.print("<b>");
-
-		prtout.print("HTTP Status : ");
-		prtout.print(httpStatus);
-
-		prtout.print("</b>");
-		prtout.print("</font>");
-
-		if (exception.getMessage() != null) {
-			prtout.print("<br>");
-			prtout.print("<br>");
-			prtout.print(NEWLINE);
-			prtout.print("Message : ");
-			prtout.print(exception.getMessage());
-		}
-
-		prtout.print("<br>");
-		prtout.print("<br>");
-		prtout.print(NEWLINE);
-
-		prtout.print("Exception Detail : ");
-		prtout.print("<br>");
-		prtout.print("<br>");
-		prtout.print(NEWLINE);
-
-		prtout.print(HTML_BLANK);
-		prtout.print(HTML_BLANK);
-		prtout.print(HTML_BLANK);
-		prtout.print(HTML_BLANK);
-		prtout.print(exception.toString());
-
-		StackTraceElement[] stackTraceElement = exception.getStackTrace();
-		if (stackTraceElement != null) {
-			for (int i = 0; i < stackTraceElement.length; i++) {
-				prtout.print("<br>");
-				prtout.print(NEWLINE);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(stackTraceElement[i].toString());
-			}
-		}
-
-		prtout.print("<br>");
-		prtout.print("<br>");
-		prtout.print(NEWLINE);
-
-		prtout.print("<hr/>");
-		prtout.print(NEWLINE);
-
-		prtout.print("<font size=\"5\">");
-		prtout.print("<SPAN style='Arial;font-size:38%;vertical;color:#B2B2B2'>");
-		prtout.print("<b>");
-		prtout.print(REFLEX_SIGNATURE);
-		prtout.print("</b>");
-		prtout.print("</font>");
-
-		prtout.print("<br>");
-		prtout.print("<br>");
-		prtout.print(NEWLINE);
-
-		prtout.print("</body>");
-		prtout.print(NEWLINE);
-		prtout.print("</html>");
-
-		try {
-			prtout.flush();
-			out.flush();
-			out.close();
-		} catch (Exception re) {
-			logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
-		}
-	}
-
-	/**
 	 * レスポンス出力（ファイル用）
 	 * @param req HttpServletRequest
 	 * @param resp HttpServletResponse
@@ -540,16 +412,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public static void doResponseFile(HttpServletRequest req, HttpServletResponse resp)
 	throws IOException {
 
-		String reqFileTemp = "";
-
-		reqFileTemp = req.getPathInfo();
-
-		if (reqFileTemp.indexOf(REFLEX_LOGOS) >= 0) {
-			reqFileTemp = REFLEX_LOGOS;
+		// getPathInfo() は null を返す場合があるため null チェックを先に行う
+		String reqFileTemp = req.getPathInfo();
+		if (reqFileTemp == null || "".equals(reqFileTemp)) {
+			reqFileTemp = DEFAULT_PAGE;
 		}
 
-		if ("".equals(reqFileTemp)) {
-			reqFileTemp = DEFAULT_PAGE;
+		// パストラバーサル防止: .. や // を含むパスを拒否
+		if (reqFileTemp.contains("..") || reqFileTemp.contains("//")) {
+			throw new IOException("Invalid path: " + reqFileTemp);
 		}
 
 		String reqFilePath = null;

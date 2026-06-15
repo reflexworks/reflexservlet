@@ -7,6 +7,7 @@ import java.io.InputStream;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.exception.JSONException;
 import jp.sourceforge.reflex.exception.XMLException;
@@ -258,15 +259,6 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	throws IOException {
 		ReflexServletUtil.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
 				statusCode, isGZip, isStrict, isNoCache, isSameOrigin, contentType);
-	}
-
-	/**
-	 * エラーページ出力
-	 * @param resp HttpServletResponse
-	 * @param exception 例外オブジェクト
-	 */
-	public void doErrorPage(HttpServletResponse resp, Throwable exception) throws IOException {
-		ReflexServletUtil.doErrorPage(resp, exception);
 	}
 
 	/**
