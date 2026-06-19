@@ -215,14 +215,18 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isDisableDeflate MessagePackをDeflate圧縮しない場合true
 	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
 	 * @param isSameOrigin SameOrigin指定をする場合true
+	 * @param strictTransportSecuritySec Strict-Transport-Security ヘッダのmax-age。1以上の場合に指定。
+	 * @param includeSubDomains サブドメインもhttpsリクエストを強制する場合true。strictTransportSecuritySecが1以上の場合のみ有効。
 	 */
 	public static void doResponse(HttpServletRequest req, HttpServletResponse resp,
 			Object entities, int format, IResourceMapper rxmapper,
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
-			boolean isNoCache, boolean isSameOrigin)
+			boolean isNoCache, boolean isSameOrigin,
+			int strictTransportSecuritySec, boolean includeSubDomains)
 	throws IOException {
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode,
-				isGZip, isStrict, isNoCache, isSameOrigin, null);
+				isGZip, isStrict, isNoCache, isSameOrigin, 
+				strictTransportSecuritySec, includeSubDomains, null);
 	}
 
 	/**
@@ -238,12 +242,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
 	 * @param isSameOrigin 「X-Frame-Options: SAMEORIGIN」レスポンスヘッダを指定する場合true
+	 * @param strictTransportSecuritySec Strict-Transport-Security ヘッダのmax-age。1以上の場合に指定。
+	 * @param includeSubDomains サブドメインもhttpsリクエストを強制する場合true。strictTransportSecuritySecが1以上の場合のみ有効。
 	 * @param contentType Content-Type
 	 */
 	public static void doResponse(HttpServletRequest req, HttpServletResponse resp,
 			Object entities, int format, IResourceMapper rxmapper,
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
-			boolean isNoCache, boolean isSameOrigin, String contentType)
+			boolean isNoCache, boolean isSameOrigin,
+			int strictTransportSecuritySec, boolean includeSubDomains, String contentType)
 	throws IOException {
 		boolean isRespGZip = isGZip && isGZip(req);
 
@@ -271,6 +278,18 @@ public class ReflexServletUtil implements ReflexServletConst {
 		resp.addHeader(HEADER_XSS_PROTECTION, HEADER_XSS_PROTECTION_MODEBLOCK);
 		// HTTPレスポンス全体を検査（sniffing）してコンテンツ タイプを判断し、「Content-Type」を無視した動作を行うことを防止する。(IE対策)
 		resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
+		// HTTPSリクエスト強制
+		if (strictTransportSecuritySec >= 1) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(MAX_AGE);
+			sb.append("=");
+			sb.append(strictTransportSecuritySec);
+			if (includeSubDomains) {
+				sb.append("; ");
+				sb.append(INCLUDE_SUB_DOMAINS);
+			}
+			resp.addHeader(HEADER_STRICT_TRANSPORT_SECURITY, sb.toString());
+		}
 
 		// status=204 の場合はコンテントを返却しない。
 		if (entities == null || statusCode == HttpStatus.SC_NO_CONTENT) {
@@ -395,13 +414,16 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isNoCache ブラウザにキャッシュしない場合true
 	 * @param isSameOrigin SameOrigin指定をする場合true
+	 * @param strictTransportSecuritySec Strict-Transport-Security ヘッダのmax-age。1以上の場合に指定。
+	 * @param includeSubDomains サブドメインもhttpsリクエストを強制する場合true。strictTransportSecuritySecが1以上の場合のみ有効。
 	 */
 	public static void doHtmlPage(HttpServletRequest req, HttpServletResponse resp,
 			String html, int statusCode, boolean isGZip, boolean isNoCache,
-			boolean isSameOrigin)
+			boolean isSameOrigin, int strictTransportSecuritySec, boolean includeSubDomains)
 	throws IOException {
 		doResponse(req, resp, html, 0, null, null, statusCode, isGZip,
-				false, isNoCache, isSameOrigin, CONTENT_TYPE_HTML_CHARSET);
+				false, isNoCache, isSameOrigin, 
+				strictTransportSecuritySec, includeSubDomains, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**

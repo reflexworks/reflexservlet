@@ -10,13 +10,13 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.codec.binary.Base64;
-
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import org.apache.commons.codec.binary.Base64;
+
 import jp.sourceforge.reflex.util.DateUtil;
-import jp.sourceforge.reflex.util.SHA1;
 import jp.sourceforge.reflex.util.SHA256;
 import jp.sourceforge.reflex.util.StringUtils;
 import jp.sourceforge.reflex.util.URLDecoderPlus;
@@ -70,6 +70,7 @@ public class WsseUtil extends AuthTokenUtil {
 	 * @return WSSE認証情報
 	 */
 	public WsseAuth getWsseAuthFromHeader(HttpServletRequest req) {
+		// WSSE
 		String value = getWSSEValue(req);
 		if (!StringUtils.isBlank(value)) {
 			WsseAuth auth = parseWSSEheader(value);
@@ -79,6 +80,18 @@ public class WsseUtil extends AuthTokenUtil {
 			}
 			return auth;
 		}
+		// WSSE-APIKEY
+		value = getWSSEAPIKeyValue(req);
+		if (!StringUtils.isBlank(value)) {
+			WsseAuth auth = parseWSSEheader(value);
+			// 空の場合はブランクオブジェクトを作成して返却する。
+			if (auth == null) {
+				auth = createBlankWsseAuth(false);
+			}
+			auth.useAPIKey = true;
+			return auth;
+		}
+		// RXID
 		String rxid = getRXIDValueByHeader(req);
 		if (!StringUtils.isBlank(rxid)) {
 			WsseAuth auth = parseRXID(rxid);
@@ -151,7 +164,7 @@ public class WsseUtil extends AuthTokenUtil {
 	}
 
 	/**
-	 * WSSE認証チェック.
+	 * WSSE認証チェック
 	 * ハッシュ関数はSHA-256を使用します。
 	 * @param auth WSSE認証情報
 	 * @param password パスワード
@@ -159,23 +172,10 @@ public class WsseUtil extends AuthTokenUtil {
 	 * @return WSSE認証OKの場合true、エラーの場合false
 	 */
 	public boolean checkAuth(WsseAuth auth, String password, String apiKey) {
-		return checkAuth(auth, password, apiKey, false);
-	}
-
-	/**
-	 * WSSE認証チェック
-	 * @param auth WSSE認証情報
-	 * @param password パスワード
-	 * @param apiKey APIKey
-	 * @param isSha1 ハッシュ関数にSHA-1を使用する場合true
-	 * @return WSSE認証OKの場合true、エラーの場合false
-	 */
-	public boolean checkAuth(WsseAuth auth, String password, String apiKey,
-			boolean isSha1) {
 		if (auth == null) {
 			return false;
 		}
-		if (auth.isRxid && apiKey == null) {
+		if (auth.useAPIKey && apiKey == null) {
 			return false;
 		}
 
@@ -185,7 +185,7 @@ public class WsseUtil extends AuthTokenUtil {
 			byte[] nonceB = Base64.decodeBase64(auth.nonce.getBytes(ENCODING));
 			byte[] createdB = auth.created.getBytes(ENCODING);
 			byte[] apiKeyB = null;
-			if (auth.isRxid) {
+			if (auth.useAPIKey) {
 				apiKeyB = apiKey.getBytes(ENCODING);
 			}
 
@@ -194,13 +194,13 @@ public class WsseUtil extends AuthTokenUtil {
 			
 			int len = nonceB.length + createdB.length + passwordB.length;
 			int apiKeyLen = 0;
-			if (auth.isRxid) {
+			if (auth.useAPIKey) {
 				// APIKeyを含む
 				apiKeyLen = apiKeyB.length;
 				len += apiKeyLen;
 			}
 			byte[] v = new byte[len];
-			if (auth.isRxid) {
+			if (auth.useAPIKey) {
 				// APIKeyを含む
 				System.arraycopy(apiKeyB, 0, v, 0, apiKeyB.length);
 			}
@@ -208,28 +208,15 @@ public class WsseUtil extends AuthTokenUtil {
 			System.arraycopy(createdB, 0, v, apiKeyLen + nonceB.length, createdB.length);
 			System.arraycopy(passwordB, 0, v, apiKeyLen + nonceB.length + createdB.length, 
 					passwordB.length);
-
-			//MessageDigest md = MessageDigest.getInstance(HASH_ALGORITHM);
-			//md.update(v);
-			//
-			//digestを比較
-			//byte[] mdDigestB = md.digest();
 			
 			//digestを比較
-			byte[] mdDigestB = null;
-			if (isSha1) {
-				mdDigestB = SHA1.hash(v);
-			} else {
-				mdDigestB = SHA256.hash(v);
-			}
+			byte[] mdDigestB = SHA256.hash(v);
 			boolean isEqual = MessageDigest.isEqual(mdDigestB, digestB);
 			if (isEqual) {
 				auth.password = password;	// Wsseオブジェクトにpasswordを設定
 			}
 			return isEqual;
 
-		//} catch (NoSuchAlgorithmException e) {
-		//	logger.log(Level.WARNING, e.getMessage(), e);
 		} catch (UnsupportedEncodingException e) {
 			logger.log(Level.WARNING, e.getMessage(), e);
 		}
@@ -270,6 +257,22 @@ public class WsseUtil extends AuthTokenUtil {
 		return value;
 	}
 	
+	/**
+	 * リクエストからWSSE-APIKEY文字列を取得.
+	 * @param req リクエスト
+	 * @return WSSE-APIKEY文字列
+	 */
+	public String getWSSEAPIKeyValue(HttpServletRequest req) {
+		String value = req.getHeader(WSSE_APIKEY);
+		if (StringUtils.isBlank(value)) {
+			value = req.getHeader(WSSE_APIKEY_UPPER_LOWER);
+		}
+		if (StringUtils.isBlank(value)) {
+			value = req.getHeader(WSSE_APIKEY_LOWER);
+		}
+		return value;
+	}
+
 	/**
 	 * リクエストヘッダからRXID文字列を取得.
 	 * @param req リクエスト

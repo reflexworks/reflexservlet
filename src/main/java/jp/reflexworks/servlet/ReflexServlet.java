@@ -72,7 +72,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			IResourceMapper rxmapper, DeflateUtil deflateUtil) 
 	throws IOException {
-		int statusCode = SC_OK;
+		int statusCode = HttpStatus.SC_OK;
 		this.doResponse(resp, entities, useJson, rxmapper, deflateUtil, statusCode);
 	}
 
@@ -90,7 +90,7 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	public void doResponse(HttpServletResponse resp, Object entities, boolean useJson, 
 			IResourceMapper rxmapper, DeflateUtil deflateUtil, String contentType) 
 	throws IOException {
-		int statusCode = SC_OK;
+		int statusCode = HttpStatus.SC_OK;
 		this.doResponse(resp, entities, useJson, rxmapper, deflateUtil, statusCode, 
 				contentType);
 	}
@@ -129,61 +129,16 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 			int statusCode, String contentType) 
 	throws IOException {
 		// GZIP圧縮しない
+		// XMLの名前空間を出力する
 		// no-cache指定する
 		// sameorigin指定する
-		doResponse(null, resp, entities, useJson, rxmapper, deflateUtil, statusCode, 
-				contentType, false, true, true);
-	}
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * </p>
-	 * @param req HttpServletRequest
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param useJson true:JSON形式、false:XML形式
-	 * @param rxmapper Resource Mapper
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param isGZip GZIP圧縮する場合true
-	 * @param isNoCache no-cache指定する場合true
-	 * @param isSameOrigin SameOrigin指定をする場合true
-	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, boolean useJson, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, boolean isGZip,
-			boolean isNoCache, boolean isSameOrigin) 
-	throws IOException {
-		doResponse(req, resp, entities, useJson, rxmapper, deflateUtil, 
-				statusCode, null, isGZip, isNoCache, isSameOrigin);
-	}
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * </p>
-	 * @param req HttpServletRequest
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param useJson true:JSON形式、false:XML形式
-	 * @param rxmapper Resource Mapper
-	 * @param deflateUtil DeflateUtil
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param contentType Content-Type
-	 * @param isGZip GZIP圧縮する場合true
-	 * @param isNoCache no-cache指定する場合true
-	 * @param isSameOrigin SameOrigin指定をする場合true
-	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, boolean useJson, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, String contentType, boolean isGZip,
-			boolean isNoCache, boolean isSameOrigin) 
-	throws IOException {
-		int format = ReflexServletUtil.convertFormatType(useJson);
-		doResponse(req, resp, entities, format, rxmapper, deflateUtil, 
-				statusCode, contentType, isGZip, true, isNoCache, isSameOrigin);	// 名前空間出力(旧バージョン)
+		// https強制しない
+		int format = FORMAT_JSON;
+		if (!useJson) {
+			format = FORMAT_XML;
+		}
+		doResponse(null, resp, entities, format, rxmapper, deflateUtil, statusCode, 
+				contentType, false, true, true, true, 0, false);
 	}
 
 	/**
@@ -198,67 +153,23 @@ public class ReflexServlet extends HttpServlet implements ReflexServletConst {
 	 * @param rxmapper Resource Mapper
 	 * @param deflateUtil DeflateUtil
 	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
+	 * @param contentType Content-Type
+	 * @param isStrict XMLの名前空間を出力する場合true
 	 * @param isGZip GZIP圧縮する場合true
 	 * @param isNoCache no-cache指定する場合true
 	 * @param isSameOrigin SameOrigin指定をする場合true
-	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
-			boolean isNoCache, boolean isSameOrigin) 
-	throws IOException {
-		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode, null,
-				isGZip, isStrict, isNoCache, isSameOrigin);
-	}
-	
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * </p>
-	 * @param req HttpServletRequest
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 1:XML, 2:JSON, 3:MessagePack
-	 * @param rxmapper Resource Mapper
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param contentType Content-Type
-	 * @param isGZip GZIP圧縮する場合true
+	 * @param strictTransportSecuritySec Strict-Transport-Security ヘッダのmax-age。1以上の場合に指定。
+	 * @param includeSubDomains サブドメインもhttpsリクエストを強制する場合true。strictTransportSecuritySecが1以上の場合のみ有効。
 	 */
 	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
 			Object entities, int format, IResourceMapper rxmapper, 
 			DeflateUtil deflateUtil, int statusCode, String contentType, boolean isGZip, 
-			boolean isStrict) 
-	throws IOException {
-		// no-cache指定する 
-		// SameOrigin指定する
-		doResponse(req, resp, entities, format, rxmapper, deflateUtil,
-				statusCode, contentType, isGZip, isStrict, true, true);
-	}
-
-	/**
-	 * レスポンス出力.
-	 * <p>
-	 * 指定されたオブジェクトをXMLまたはJSONにシリアライズして、レスポンスデータに設定します。<br>
-	 * </p>
-	 * @param req HttpServletRequest
-	 * @param resp HttpServletResponse
-	 * @param entities XMLまたはJSONにシリアライズするentity
-	 * @param format 1:XML, 2:JSON, 3:MessagePack
-	 * @param rxmapper Resource Mapper
-	 * @param statusCode レスポンスのステータスに設定するコード。デフォルトはSC_OK(200)。
-	 * @param contentType Content-Type
-	 * @param isGZip GZIP圧縮する場合true
-	 * @param isNoCache no-cache指定する場合true
-	 * @param isSameOrigin SameOrigin指定をする場合true
-	 */
-	public void doResponse(HttpServletRequest req, HttpServletResponse resp, 
-			Object entities, int format, IResourceMapper rxmapper, 
-			DeflateUtil deflateUtil, int statusCode, String contentType, boolean isGZip, 
-			boolean isStrict, boolean isNoCache, boolean isSameOrigin) 
+			boolean isStrict, boolean isNoCache, boolean isSameOrigin,
+			int strictTransportSecuritySec, boolean includeSubDomains) 
 	throws IOException {
 		ReflexServletUtil.doResponse(req, resp, entities, format, rxmapper, deflateUtil,
-				statusCode, isGZip, isStrict, isNoCache, isSameOrigin, contentType);
+				statusCode, isGZip, isStrict, isNoCache, isSameOrigin, 
+				strictTransportSecuritySec, includeSubDomains, contentType);
 	}
 
 	/**
