@@ -19,7 +19,7 @@ import java.util.zip.GZIPOutputStream;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jp.reflexworks.servlet.exception.InvokeException;
+
 import jp.reflexworks.servlet.util.HeaderUtil;
 import jp.sourceforge.reflex.IResourceMapper;
 import jp.sourceforge.reflex.exception.JSONException;
@@ -215,14 +215,18 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isDisableDeflate MessagePackをDeflate圧縮しない場合true
 	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
 	 * @param isSameOrigin SameOrigin指定をする場合true
+	 * @param strictTransportSecuritySec Strict-Transport-Security ヘッダのmax-age。1以上の場合に指定。
+	 * @param includeSubDomains サブドメインもhttpsリクエストを強制する場合true。strictTransportSecuritySecが1以上の場合のみ有効。
 	 */
 	public static void doResponse(HttpServletRequest req, HttpServletResponse resp,
 			Object entities, int format, IResourceMapper rxmapper,
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
-			boolean isNoCache, boolean isSameOrigin)
+			boolean isNoCache, boolean isSameOrigin,
+			int strictTransportSecuritySec, boolean includeSubDomains)
 	throws IOException {
 		doResponse(req, resp, entities, format, rxmapper, deflateUtil, statusCode,
-				isGZip, isStrict, isNoCache, isSameOrigin, null);
+				isGZip, isStrict, isNoCache, isSameOrigin, 
+				strictTransportSecuritySec, includeSubDomains, null);
 	}
 
 	/**
@@ -238,12 +242,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isStrict XMLの名前空間を出力する場合true
 	 * @param isNoCache ブラウザにキャッシュしない設定をレスポンスヘッダに指定する場合true
 	 * @param isSameOrigin 「X-Frame-Options: SAMEORIGIN」レスポンスヘッダを指定する場合true
+	 * @param strictTransportSecuritySec Strict-Transport-Security ヘッダのmax-age。1以上の場合に指定。
+	 * @param includeSubDomains サブドメインもhttpsリクエストを強制する場合true。strictTransportSecuritySecが1以上の場合のみ有効。
 	 * @param contentType Content-Type
 	 */
 	public static void doResponse(HttpServletRequest req, HttpServletResponse resp,
 			Object entities, int format, IResourceMapper rxmapper,
 			DeflateUtil deflateUtil, int statusCode, boolean isGZip, boolean isStrict,
-			boolean isNoCache, boolean isSameOrigin, String contentType)
+			boolean isNoCache, boolean isSameOrigin,
+			int strictTransportSecuritySec, boolean includeSubDomains, String contentType)
 	throws IOException {
 		boolean isRespGZip = isGZip && isGZip(req);
 
@@ -271,6 +278,18 @@ public class ReflexServletUtil implements ReflexServletConst {
 		resp.addHeader(HEADER_XSS_PROTECTION, HEADER_XSS_PROTECTION_MODEBLOCK);
 		// HTTPレスポンス全体を検査（sniffing）してコンテンツ タイプを判断し、「Content-Type」を無視した動作を行うことを防止する。(IE対策)
 		resp.addHeader(HEADER_CONTENT_TYPE_OPTIONS, HEADER_CONTENT_TYPE_OPTIONS_NOSNIFF);
+		// HTTPSリクエスト強制
+		if (strictTransportSecuritySec >= 1) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(MAX_AGE);
+			sb.append("=");
+			sb.append(strictTransportSecuritySec);
+			if (includeSubDomains) {
+				sb.append("; ");
+				sb.append(INCLUDE_SUB_DOMAINS);
+			}
+			resp.addHeader(HEADER_STRICT_TRANSPORT_SECURITY, sb.toString());
+		}
 
 		// status=204 の場合はコンテントを返却しない。
 		if (entities == null || statusCode == HttpStatus.SC_NO_CONTENT) {
@@ -395,141 +414,16 @@ public class ReflexServletUtil implements ReflexServletConst {
 	 * @param isGZip GZIP形式にする場合true
 	 * @param isNoCache ブラウザにキャッシュしない場合true
 	 * @param isSameOrigin SameOrigin指定をする場合true
+	 * @param strictTransportSecuritySec Strict-Transport-Security ヘッダのmax-age。1以上の場合に指定。
+	 * @param includeSubDomains サブドメインもhttpsリクエストを強制する場合true。strictTransportSecuritySecが1以上の場合のみ有効。
 	 */
 	public static void doHtmlPage(HttpServletRequest req, HttpServletResponse resp,
 			String html, int statusCode, boolean isGZip, boolean isNoCache,
-			boolean isSameOrigin)
+			boolean isSameOrigin, int strictTransportSecuritySec, boolean includeSubDomains)
 	throws IOException {
 		doResponse(req, resp, html, 0, null, null, statusCode, isGZip,
-				false, isNoCache, isSameOrigin, CONTENT_TYPE_HTML_CHARSET);
-	}
-
-	/**
-	 * エラーページ出力.
-	 * <p>
-	 * ReflexWorksのデフォルトエラーページを出力します.
-	 * </p>
-	 * @param resp HttpServletResponse
-	 * @param exception 例外オブジェクト
-	 */
-	public static void doErrorPage(HttpServletResponse resp, Throwable exception)
-	throws IOException {
-
-		int httpStatus = SC_INTERNAL_SERVER_ERROR;
-		if (exception instanceof InvokeException) {
-			httpStatus = ((InvokeException)exception).getHttpStatus();
-		}
-
-		if (resp.containsHeader(HEADER_CONTENT_ENCODING)) {
-			resp.setHeader(HEADER_CONTENT_ENCODING, null);
-		}
-
-		OutputStream out = null;
-		out = resp.getOutputStream();
-
-		// レスポンスデータ出力
-		PrintWriter prtout = new PrintWriter(new BufferedWriter(new OutputStreamWriter(out, ENCODING)));
-
-		resp.setContentType(CONTENT_TYPE_HTML_CHARSET);
-
-		prtout.print("<html>");
-		prtout.print(NEWLINE);
-		prtout.print("<head>");
-		prtout.print(NEWLINE);
-		prtout.print("<title>");
-		prtout.print(NEWLINE);
-		prtout.print("[ReflexContainer] Error Report ");
-		prtout.print("</title>");
-		prtout.print(NEWLINE);
-		prtout.print("</head>");
-		prtout.print(NEWLINE);
-		prtout.print("<body>");
-		prtout.print(NEWLINE);
-
-		prtout.print("<p align=\"center\"><a href=\"http://www.virtual-tech.net/\"><img src=\"");
-		prtout.print(REFLEX_LOGOS);
-		prtout.print("\"></img></a></p>");
-
-		prtout.print("<hr/>");
-
-		prtout.print("<font size=\"5\">");
-		prtout.print("<b>");
-
-		prtout.print("HTTP Status : ");
-		prtout.print(httpStatus);
-
-		prtout.print("</b>");
-		prtout.print("</font>");
-
-		if (exception.getMessage() != null) {
-			prtout.print("<br>");
-			prtout.print("<br>");
-			prtout.print(NEWLINE);
-			prtout.print("Message : ");
-			prtout.print(exception.getMessage());
-		}
-
-		prtout.print("<br>");
-		prtout.print("<br>");
-		prtout.print(NEWLINE);
-
-		prtout.print("Exception Detail : ");
-		prtout.print("<br>");
-		prtout.print("<br>");
-		prtout.print(NEWLINE);
-
-		prtout.print(HTML_BLANK);
-		prtout.print(HTML_BLANK);
-		prtout.print(HTML_BLANK);
-		prtout.print(HTML_BLANK);
-		prtout.print(exception.toString());
-
-		StackTraceElement[] stackTraceElement = exception.getStackTrace();
-		if (stackTraceElement != null) {
-			for (int i = 0; i < stackTraceElement.length; i++) {
-				prtout.print("<br>");
-				prtout.print(NEWLINE);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(HTML_BLANK);
-				prtout.print(stackTraceElement[i].toString());
-			}
-		}
-
-		prtout.print("<br>");
-		prtout.print("<br>");
-		prtout.print(NEWLINE);
-
-		prtout.print("<hr/>");
-		prtout.print(NEWLINE);
-
-		prtout.print("<font size=\"5\">");
-		prtout.print("<SPAN style='Arial;font-size:38%;vertical;color:#B2B2B2'>");
-		prtout.print("<b>");
-		prtout.print(REFLEX_SIGNATURE);
-		prtout.print("</b>");
-		prtout.print("</font>");
-
-		prtout.print("<br>");
-		prtout.print("<br>");
-		prtout.print(NEWLINE);
-
-		prtout.print("</body>");
-		prtout.print(NEWLINE);
-		prtout.print("</html>");
-
-		try {
-			prtout.flush();
-			out.flush();
-			out.close();
-		} catch (Exception re) {
-			logger.log(Level.WARNING, "[close error] " + re.getClass().getName(), re);
-		}
+				false, isNoCache, isSameOrigin, 
+				strictTransportSecuritySec, includeSubDomains, CONTENT_TYPE_HTML_CHARSET);
 	}
 
 	/**
@@ -540,16 +434,15 @@ public class ReflexServletUtil implements ReflexServletConst {
 	public static void doResponseFile(HttpServletRequest req, HttpServletResponse resp)
 	throws IOException {
 
-		String reqFileTemp = "";
-
-		reqFileTemp = req.getPathInfo();
-
-		if (reqFileTemp.indexOf(REFLEX_LOGOS) >= 0) {
-			reqFileTemp = REFLEX_LOGOS;
+		// getPathInfo() は null を返す場合があるため null チェックを先に行う
+		String reqFileTemp = req.getPathInfo();
+		if (reqFileTemp == null || "".equals(reqFileTemp)) {
+			reqFileTemp = DEFAULT_PAGE;
 		}
 
-		if ("".equals(reqFileTemp)) {
-			reqFileTemp = DEFAULT_PAGE;
+		// パストラバーサル防止: .. や // を含むパスを拒否
+		if (reqFileTemp.contains("..") || reqFileTemp.contains("//")) {
+			throw new IOException("Invalid path: " + reqFileTemp);
 		}
 
 		String reqFilePath = null;
