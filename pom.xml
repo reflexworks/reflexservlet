@@ -5,7 +5,7 @@
   <groupId>jp.reflexworks</groupId>
   <artifactId>reflexservlet</artifactId>
   <packaging>jar</packaging>
-  <version>10.0.3</version>
+  <version>10.0.4</version>
 
   <description>Reflex Servlet</description>
   <name>Reflex Servlet</name>
@@ -17,7 +17,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <reflexcoreVersion>10.0.3</reflexcoreVersion>
+    <reflexcoreVersion>10.0.4</reflexcoreVersion>
     <maven.compiler.source>25</maven.compiler.source>
     <maven.compiler.target>25</maven.compiler.target>
   </properties>
